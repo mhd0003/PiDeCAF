@@ -1,13 +1,13 @@
 #ifndef SERIAL_TALKER_H
 #define SERIAL_TALKRE_H 
 
-#include <iostream>
-#include <cstdlib>
-#include <unistd.h>
-#include <cmath>
+//#include <iostream>
+//#include <cstdlib>
+#include <unistd.h> /*fcntl - manip file descriptor */
+//#include <cmath>
 #include <string>
-#include <inttypes.h>
-#include <fstream>
+//#include <inttypes.h>
+//#include <fstream>
 
 // Serial includes
 #include <stdio.h>   /* Standard input/output definitions */
@@ -24,46 +24,35 @@
 //#include <glib.h>
 
 // Latency Benchmarking
-#include <sys/time.h>
-#include <time.h>
+//#include <sys/time.h>
+//#include <time.h>
 
 //Standard C++ headers
-#include <sstream>
+//#include <sstream>
 
-
-//ROS headers
-/*
-#include "ros/console.h"
-#include "ros/ros.h"
-#include "std_msgs/String.h"
-
-#include "au_uav_ros/standardDefs.h"
-
-#include "au_uav_ros/Ack.h"
-#include "au_uav_ros/Command.h"
-#include "au_uav_ros/CloseComms.h"
-#include "au_uav_ros/InitComms.h"
-#include "au_uav_ros/Telemetry.h"
-*/
-#include "mavlink/v1.0/common/mavlink.h"
+//#include "mavlink/v1.0/common/mavlink.h"
 
 namespace au_uav_ros{
-	class XbeeIn {
+	class Serial_talker{
 	private:
+/*
 		int baud;
 		int sysid;
 		int compid;
 		int serial_compid;
 		std::string port;
 		bool pc2serial;
+*/
+		std::string port;
 		int fd;
-		int updateIndex;
+/*		int updateIndex;
 		int WPSendSeqNum;
 		int myMessage[256];
+*/
 	public:
-		bool setup_port(int fd, int baud, int data_bits, int stop_bits, bool parity, bool hardware_control);
-		int open_port(std::string& port);
-		bool close_port(int fd);
+		bool setup_port(int baud, int data_bits, int stop_bits, bool parity);
+		int open_port(std::string port);
+		bool close_port();
 		//bool convertMavlinkTelemetryToROS(mavlink_au_uav_t &mavMessage, au_uav_ros::Telemetry &tUpdate);
 		void* serial_wait(void* serial_ptr);
 	};

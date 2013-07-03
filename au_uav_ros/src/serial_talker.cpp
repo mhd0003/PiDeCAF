@@ -25,14 +25,15 @@ void XbeeIn::setup() {
 }
 */
 
-int au_uav_ros::XbeeIn::open_port(std::string& port)
+int au_uav_ros::Serial_talker::open_port(std::string _port)
 {
 	int _fd; /* File descriptor for the port */
 	
 	// Open serial port
 	// O_RDWR - Read and write
 	// O_NOCTTY - Ignore special chars like CTRL-C
-	_fd = open(port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+	port = _port;
+	_fd = open(_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
 	if (_fd == -1)
 	{
 		/* Could not open the port. */
@@ -43,21 +44,22 @@ int au_uav_ros::XbeeIn::open_port(std::string& port)
 	{
 		fcntl(_fd, F_SETFL, 0);
 	}
-	
+
+	fd = _fd;	
 	return (_fd);
 }
 
-bool au_uav_ros::XbeeIn::setup_port(int _fd, int baud, int data_bits, int stop_bits, bool parity, bool hardware_control)
+bool au_uav_ros::Serial_talker::setup_port(int baud, int data_bits, int stop_bits, bool parity )
 {
 	//struct termios options;
 	
 	struct termios  config;
-	if(!isatty(_fd))
+	if(!isatty(fd))
 	{
 		fprintf(stderr, "\nERROR: file descriptor %s is NOT a serial port\n", port.c_str());
 		return false;
 	}
-	if(tcgetattr(_fd, &config) < 0)
+	if(tcgetattr(fd, &config) < 0)
 	{
 		fprintf(stderr, "\nERROR: could not read configuration of port %s\n", port.c_str());
 		return false;
@@ -157,7 +159,7 @@ bool au_uav_ros::XbeeIn::setup_port(int _fd, int baud, int data_bits, int stop_b
 	//
 	// Finally, apply the configuration
 	//
-	if(tcsetattr(_fd, TCSAFLUSH, &config) < 0)
+	if(tcsetattr(fd, TCSAFLUSH, &config) < 0)
 	{
 		fprintf(stderr, "\nERROR: could not set configuration of port %s\n", port.c_str());
 		return false;
@@ -165,9 +167,9 @@ bool au_uav_ros::XbeeIn::setup_port(int _fd, int baud, int data_bits, int stop_b
 	return true;
 }
 
-bool au_uav_ros::XbeeIn::close_port(int _fd)
+bool au_uav_ros::Serial_talker::close_port()
 {
-	close(_fd);
+	close(fd);
 	return true;
 }
 /*
