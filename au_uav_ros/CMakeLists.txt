@@ -13,19 +13,6 @@ add_message_files(FILES
 )
 
 add_service_files(FILES
-  Ack.srv
-  AddPlane.srv
-  CloseComms.srv
-  Double.srv
-  ExitCommand.srv
-  InitComms.srv
-  LoadCourse.srv
-  Plane.srv
-  RemovePlane.srv
-  RemoveWp.srv
-  SendFilePath.srv
-  SetWp.srv
-  SimPlane.srv
   Wp.srv
 )
 
@@ -35,15 +22,16 @@ SET(
 
 include_directories(include ${BOOST_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
-find_package(GLIB2 REQUIRED)
-find_Package(GTHREAD2 REQUIRED)
+#no glib
+#find_package(GLIB2 REQUIRED)
+#find_Package(GTHREAD2 REQUIRED)
 
 
 INCLUDE_DIRECTORIES(
   ${MAVLINK_INCLUDE_DIR}
-  ${GLIB2_MAIN_INCLUDE_DIR}
-  ${GLIB2_INTERNAL_INCLUDE_DIR}
-  ${GTHREAD2_MAIN_INCLUDE_DIR}
+#  ${GLIB2_MAIN_INCLUDE_DIR}
+#  ${GLIB2_INTERNAL_INCLUDE_DIR}
+#  ${GTHREAD2_MAIN_INCLUDE_DIR}
   ../include/
 )
 
@@ -51,58 +39,59 @@ generate_messages(DEPENDENCIES
   std_msgs
 )
 
-add_library(standardFuncs src/standardFuncs.cpp include/au_uav_ros/standardFuncs.h)
-add_library(standardDefs src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
+#add_library(standardFuncs src/standardFuncs.cpp include/au_uav_ros/standardFuncs.h)
+#add_library(standardDefs src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
 #add_library(planeBuilder src/planeBuilder.cpp include/au_uav_ros/planeBuilder.h src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
-add_library(planeBuilder src/planeBuilder.cpp include/au_uav_ros/planeBuilder.h)
+#add_library(planeBuilder src/planeBuilder.cpp include/au_uav_ros/planeBuilder.h)
 #add_library(planeObject src/planeObject.cpp include/au_uav_ros/planeObject.h src/standardFuncs.cpp include/au_uav_ros/standardFuncs.h src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
-add_library(planeObject src/planeObject.cpp include/au_uav_ros/planeObject.h)
-add_library(simPlaneObject src/simPlaneObject.cpp include/au_uav_ros/simPlaneObject.h)
-add_library(vmath src/vmath.cpp include/au_uav_ros/vmath.h)
-add_library(ripna src/ripna.cpp include/au_uav_ros/ripna.h)
-add_library(collisionAvoidance src/collisionAvoidance.cpp include/au_uav_ros/collisionAvoidance.h)
+#add_library(planeObject src/planeObject.cpp include/au_uav_ros/planeObject.h)
+#add_library(simPlaneObject src/simPlaneObject.cpp include/au_uav_ros/simPlaneObject.h)
+#add_library(vmath src/vmath.cpp include/au_uav_ros/vmath.h)
+#add_library(ripna src/ripna.cpp include/au_uav_ros/ripna.h)
+#add_library(collisionAvoidance src/collisionAvoidance.cpp include/au_uav_ros/collisionAvoidance.h)
+add_library(serial_talker src/serial_talker.cpp)
 
-add_executable(simulator src/simulator.cpp include/au_uav_ros/simulator.h include/au_uav_ros/standardDefs.h)
-add_executable(xbeeOut src/xbeeOut.cpp include/au_uav_ros/xbeeOut.h)
-add_executable(xbeeIn src/xbeeIn.cpp include/au_uav_ros/xbeeIn.h)
-add_executable(guiInterfacer src/guiInterfacer.cpp include/au_uav_ros/guiInterfacer.h)
-add_executable(coordinator src/coordinator.cpp include/au_uav_ros/coordinator.h)
+#add_executable(simulator src/simulator.cpp include/au_uav_ros/simulator.h include/au_uav_ros/standardDefs.h)
+#add_executable(xbeeOut src/xbeeOut.cpp include/au_uav_ros/xbeeOut.h)
+#add_executable(xbeeIn src/xbeeIn.cpp include/au_uav_ros/xbeeIn.h)
+#add_executable(guiInterfacer src/guiInterfacer.cpp include/au_uav_ros/guiInterfacer.h)
+#add_executable(coordinator src/coordinator.cpp include/au_uav_ros/coordinator.h)
 
-add_dependencies(standardDefs ${PROJECT_NAME}_gencpp)
-add_dependencies(standardFuncs ${PROJECT_NAME}_gencpp)
-add_dependencies(simulator ${PROJECT_NAME}_gencpp)
-add_dependencies(simPlaneObject ${PROJECT_NAME}_gencpp)
-add_dependencies(xbeeIn ${PROJECT_NAME}_gencpp)
-add_dependencies(xbeeOut ${PROJECT_NAME}_gencpp)
-add_dependencies(guiInterfacer ${PROJECT_NAME}_gencpp)
-add_dependencies(coordinator ${PROJECT_NAME}_gencpp)
-add_dependencies(planeBuilder ${PROJECT_NAME}_gencpp)
+#add_dependencies(standardDefs ${PROJECT_NAME}_gencpp)
+#add_dependencies(standardFuncs ${PROJECT_NAME}_gencpp)
+#add_dependencies(simulator ${PROJECT_NAME}_gencpp)
+#add_dependencies(simPlaneObject ${PROJECT_NAME}_gencpp)
+#add_dependencies(xbeeIn ${PROJECT_NAME}_gencpp)
+#add_dependencies(xbeeOut ${PROJECT_NAME}_gencpp)
+#add_dependencies(guiInterfacer ${PROJECT_NAME}_gencpp)
+#add_dependencies(coordinator ${PROJECT_NAME}_gencpp)
+#add_dependencies(planeBuilder ${PROJECT_NAME}_gencpp)
 
-target_link_libraries(xbeeIn
-  ${GLIB2_LIBRARY}
-  ${GTHREAD2_LIBRARY}
-  ${catkin_LIBRARIES}
-)
+#target_link_libraries(xbeeIn
+#  ${GLIB2_LIBRARY}
+#  ${GTHREAD2_LIBRARY}
+#  ${catkin_LIBRARIES}
+#)
 
-target_link_libraries(xbeeOut
-  ${GLIB2_LIBRARY}
-  ${GTHREAD2_LIBRARY}
-  ${catkin_LIBRARIES}
-)
+#target_link_libraries(xbeeOut
+#  ${GLIB2_LIBRARY}
+#  ${GTHREAD2_LIBRARY}
+#  ${catkin_LIBRARIES}
+#)
 #target_link_libraries(
 #  ${PROJECT_NAME}
 #  ${BOOST_LIBRARIES}
 #)
 
-target_link_libraries(ripna vmath)
-target_link_libraries(standardDefs ${BOOST_LIBRARIES})
-target_link_libraries(planeBuilder standardDefs)
-target_link_libraries(planeObject standardFuncs standardDefs)
-target_link_libraries(collisionAvoidance ripna)
-target_link_libraries(simPlaneObject planeObject)
-target_link_libraries(simulator ${catkin_LIBRARIES} simPlaneObject)
-target_link_libraries(guiInterfacer ${catkin_LIBRARIES})
-target_link_libraries(coordinator ${catkin_LIBRARIES} planeBuilder simPlaneObject planeObject collisionAvoidance vmath)
+#target_link_libraries(ripna vmath)
+#target_link_libraries(standardDefs ${BOOST_LIBRARIES})
+#target_link_libraries(planeBuilder standardDefs)
+#target_link_libraries(planeObject standardFuncs standardDefs)
+#target_link_libraries(collisionAvoidance ripna)
+#target_link_libraries(simPlaneObject planeObject)
+#target_link_libraries(simulator ${catkin_LIBRARIES} simPlaneObject)
+#target_link_libraries(guiInterfacer ${catkin_LIBRARIES})
+#target_link_libraries(coordinator ${catkin_LIBRARIES} planeBuilder simPlaneObject planeObject collisionAvoidance vmath)
 
 catkin_package(
    INCLUDE_DIRS include
