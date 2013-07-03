@@ -14,16 +14,26 @@ au_uav_ros::XbeeTalker::XbeeTalker(std::string _port, int _baud)	{
 	
 }
 
-bool au_uav_ros::XbeeTalker::init()	{
+bool au_uav_ros::XbeeTalker::init(ros::NodeHandle _n)	{
+	//Open and setup port.
 	if(m_xbee.open_port(m_port) == -1)	{
 		ROS_INFO("Could not open port %s", m_port.c_str());
 	}
 	else	{
 		ROS_INFO("opened port %s", m_port.c_str());
-//		xbee.setup_port(baud		
+		m_xbee.setup_port(m_baud, 8, 1, true);		
 	}
+	
+	//Set up Ros stuff.
+	m_node = _n;
+	//dang it. what's a telemetry msg look like?
+	//telem_sub = m_node.subscribe("my_telemetry", 10, my_telem_callback); 
 
+}
 
+void au_uav_ros::XbeeTalker::run()	{
+
+	
 }
 
 void au_uav_ros::XbeeTalker::shutdown()	{
@@ -31,38 +41,15 @@ void au_uav_ros::XbeeTalker::shutdown()	{
 	m_xbee.close_port();
 }
 
-int main()	{
+int main(int argc, char** argv)	{
 
 	std::cout << "helo world!" <<std::endl;
 	std::string port = "/dev/ttyUSB0";
+
+	ros::init(argc, argv, "XbeeTalker");
+	ros::NodeHandle n;
 	au_uav_ros::XbeeTalker talk(port, 9600);
-	talk.init();
+	talk.init(n);
+	talk.run();
 	talk.shutdown();
-/*	
-
-	bool listen = true;
-	if(xbee.open_port(port) == -1)	{
-	}
-	else	{
-		xbee.setup_port(9600, 8, 1, true); 
-		
-		char* msg = "Hello, I'm listening!";
-		int written = write(xbee.getFD(), (char*) msg, strlen(msg));
-
-		char buffer[256];	
-		memset(buffer, '\0', 256);
-		while(listen)	{
-			printf("Blocking, waiting for read");
-			if(read(xbee.getFD(), buffer, 256) == -1)	{
-				printf("error in reading errno %d", strerror(errno));
-			}
-			if(buffer[0] == 'q')
-				listen =false;	
-			printf("\ncontents: %s", buffer);
-		}	
-
-		xbee.close_port();
-	}
-*/
-
 }
