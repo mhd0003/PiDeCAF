@@ -7,15 +7,27 @@ int main()	{
 	std::string port = "/dev/ttyUSB0";
 	SerialTalker xbee;
 
+	bool listen = true;
 	if(xbee.open_port(port) == -1)	{
-		ROS_INFO("Could not open port %s ", port.c_str());	
 	}
 	else	{
-		ROS_INFO("Successfully opened port %s", port.c_str());
-		std::cout << "HEllo world!! " <<std::endl;
 		xbee.setup_port(9600, 8, 1, true); 
-
 		
+		char* msg = "Hello, I'm listening!";
+		int written = write(xbee.getFD(), (char*) msg, strlen(msg));
+
+		char buffer[256];	
+		memset(buffer, '\0', 256);
+		while(listen)	{
+			printf("Blocking, waiting for read");
+			if(read(xbee.getFD(), buffer, 256) == -1)	{
+				printf("error in reading errno %d", strerror(errno));
+			}
+			if(buffer[0] == 'q')
+				listen =false;	
+			printf("\ncontents: %s", buffer);
+		}	
+
 		xbee.close_port();
 	}
 
