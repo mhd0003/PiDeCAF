@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(au_uav_ros)
 find_package(catkin REQUIRED
-  COMPONENTS message_generation std_msgs roscpp rospy roslib
+  COMPONENTS genmsg message_generation std_msgs roscpp rospy roslib
 )
 
 #set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -51,11 +51,9 @@ generate_messages(DEPENDENCIES
 #add_library(collisionAvoidance src/collisionAvoidance.cpp include/au_uav_ros/collisionAvoidance.h)
 add_library(serial_talker src/serial_talker.cpp)
 
-#add_executable(simulator src/simulator.cpp include/au_uav_ros/simulator.h include/au_uav_ros/standardDefs.h)
-#add_executable(xbeeOut src/xbeeOut.cpp include/au_uav_ros/xbeeOut.h)
-#add_executable(xbeeIn src/xbeeIn.cpp include/au_uav_ros/xbeeIn.h)
-#add_executable(guiInterfacer src/guiInterfacer.cpp include/au_uav_ros/guiInterfacer.h)
-#add_executable(coordinator src/coordinator.cpp include/au_uav_ros/coordinator.h)
+add_executable(xbee src/test.cpp)
+add_dependencies(xbee ${PROJECT_NAME}_gencpp)
+target_link_libraries(xbee serial_talker)
 
 #add_dependencies(standardDefs ${PROJECT_NAME}_gencpp)
 #add_dependencies(standardFuncs ${PROJECT_NAME}_gencpp)
@@ -83,6 +81,7 @@ add_library(serial_talker src/serial_talker.cpp)
 #  ${BOOST_LIBRARIES}
 #)
 
+target_link_libraries(xbee ${catkin_LIBRARIES})
 #target_link_libraries(ripna vmath)
 #target_link_libraries(standardDefs ${BOOST_LIBRARIES})
 #target_link_libraries(planeBuilder standardDefs)

@@ -1,26 +1,23 @@
-#include "au_uav_ros/Command.h"
+#include "au_uav_ros/serial_talker.h"
+#include <cstdio> //printf
+#include <string>
+#include <ros/console.h>	//used for debugging
+int main()	{
+	
+	std::string port = "/dev/ttyUSB0";
+	SerialTalker xbee;
 
-#include "ros/ros.h"
-
-using namespace au_uav_ros;
-
-int main(int argc, char **argv) {
-	ros::init(argc, argv, "talker");
-	ros::NodeHandle n;
-
-	ros::Publisher pub = n.advertise<au_uav_ros::Command>("commands", 1000);
-
-	ros::Rate r(10);
-	Command cmd;
-	cmd.planeID = 36;
-	cmd.altitude = 0;
-	cmd.longitude = 0;
-	cmd.latitude = 0;
-	cmd.commandID = 2;
-	cmd.param = 1;
-
-	while (ros::ok()) {
-		pub.publish(cmd);
-		r.sleep();
+	if(xbee.open_port(port) == -1)	{
+		ROS_INFO("Could not open port %s ", port.c_str());	
 	}
+	else	{
+		ROS_INFO("Successfully opened port %s", port.c_str());
+		std::cout << "HEllo world!! " <<std::endl;
+		xbee.setup_port(9600, 8, 1, true); 
+
+		
+		xbee.close_port();
+	}
+
+
 }

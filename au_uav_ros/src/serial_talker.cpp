@@ -13,55 +13,63 @@ void XbeeIn::setup() {
 	sendAckClient = n.serviceClient<au_uav_ros::Ack>("ack_recieved");
 	recieveAckService = n.advertiseService("add_ack", &XbeeIn::add_ack, this);
 
-	fd = -1;
+	m_fd = -1;
 	baud = 57600;
 	sysid = -1;
 	compid = 110;
 	serial_compid = 0;
-	port = "/dev/ttyUSB0";
+	m_port = "/dev/ttyUSB0";
 	pc2serial = true;
 	updateIndex = 0;
 	WPSendSeqNum = 0;
 }
 */
 
-int au_uav_ros::Serial_talker::open_port(std::string _port)
+SerialTalker::SerialTalker()	{
+	m_fd = -1;
+	m_port= ""; 
+}
+
+
+int SerialTalker::open_port(std::string _port)
 {
-	int _fd; /* File descriptor for the port */
+	int fd; /* File descriptor for the port */
 	
 	// Open serial port
 	// O_RDWR - Read and write
 	// O_NOCTTY - Ignore special chars like CTRL-C
-	port = _port;
-	_fd = open(_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
-	if (_fd == -1)
+	m_port = _port;
+	fd = open(m_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+	if (fd == -1)
 	{
 		/* Could not open the port. */
-		//ROS_ERROR("IN: COULD NOT OPEN PORT");
+//		ROS_ERROR("IN: COULD NOT OPEN PORT");
+		fprintf(stderr, "\nport %s  could not be opened\n", _port.c_str());
 		return(-1);
 	}
 	else
 	{
-		fcntl(_fd, F_SETFL, 0);
+		fcntl(fd, F_SETFL, 0);
 	}
 
-	fd = _fd;	
-	return (_fd);
+	m_fd = fd;
+	fprintf(stderr, "\nport %s opened\n", _port.c_str());
+	return (m_fd);
 }
 
-bool au_uav_ros::Serial_talker::setup_port(int baud, int data_bits, int stop_bits, bool parity )
+bool SerialTalker::setup_port(int baud, int data_bits, int stop_bits, bool parity )
 {
 	//struct termios options;
 	
 	struct termios  config;
-	if(!isatty(fd))
+	if(!isatty(m_fd))
 	{
-		fprintf(stderr, "\nERROR: file descriptor %s is NOT a serial port\n", port.c_str());
+		fprintf(stderr, "\nERROR: file descriptor %s is NOT a serial port\n", m_port.c_str());
 		return false;
 	}
-	if(tcgetattr(fd, &config) < 0)
+	if(tcgetattr(m_fd, &config) < 0)
 	{
-		fprintf(stderr, "\nERROR: could not read configuration of port %s\n", port.c_str());
+		fprintf(stderr, "\nERROR: could not read configuration of port %s\n", m_port.c_str());
 		return false;
 	}
 	//
@@ -104,7 +112,7 @@ bool au_uav_ros::Serial_talker::setup_port(int baud, int data_bits, int stop_bit
 	config.c_cc[VTIME] = 10; // was 0
 	
 	// Get the current options for the port
-	//tcgetattr(fd, &options);
+	//tcgetattr(m_fd, &options);
 	
 	switch (baud)
 	{
@@ -159,17 +167,17 @@ bool au_uav_ros::Serial_talker::setup_port(int baud, int data_bits, int stop_bit
 	//
 	// Finally, apply the configuration
 	//
-	if(tcsetattr(fd, TCSAFLUSH, &config) < 0)
+	if(tcsetattr(m_fd, TCSAFLUSH, &config) < 0)
 	{
-		fprintf(stderr, "\nERROR: could not set configuration of port %s\n", port.c_str());
+		fprintf(stderr, "\nERROR: could not set configuration of port %s\n", m_port.c_str());
 		return false;
 	}
 	return true;
 }
 
-bool au_uav_ros::Serial_talker::close_port()
+bool SerialTalker::close_port()
 {
-	close(fd);
+	close(m_fd);
 	return true;
 }
 /*
