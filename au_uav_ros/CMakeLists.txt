@@ -51,7 +51,8 @@ generate_messages(DEPENDENCIES
 #add_library(collisionAvoidance src/collisionAvoidance.cpp include/au_uav_ros/collisionAvoidance.h)
 add_library(serial_talker src/serial_talker.cpp)
 
-add_executable(xbee src/test.cpp)
+#add_executable(xbee src/test.cpp)
+add_executable(xbee src/xbee_talker.cpp)
 add_dependencies(xbee ${PROJECT_NAME}_gencpp)
 target_link_libraries(xbee serial_talker)
 
