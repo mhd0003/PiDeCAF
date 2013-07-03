@@ -38,6 +38,7 @@ int SerialTalker::open_port(std::string _port)
 	// Open serial port
 	// O_RDWR - Read and write
 	// O_NOCTTY - Ignore special chars like CTRL-C
+	// O_NDELAY - use Non blocking IO.
 	m_port = _port;
 	fd = open(m_port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
 	if (fd == -1)
@@ -49,6 +50,7 @@ int SerialTalker::open_port(std::string _port)
 	}
 	else
 	{
+		//I want this to block!!
 		fcntl(fd, F_SETFL, 0);
 	}
 
@@ -108,6 +110,9 @@ bool SerialTalker::setup_port(int baud, int data_bits, int stop_bits, bool parit
 	// One input byte is enough to return from read()
 	// Inter-character timer off
 	//
+	
+	//Note: Returns as soon as input is available, or if VTIME expires, returns with no chars. -> 
+	//Apparently, conflicts with modem hangup and EOF?? TODO
 	config.c_cc[VMIN]  = 0; //TODO changed from 1 to 0 it was blocking read so it could never get shutdown if no message was sent
 	config.c_cc[VTIME] = 10; // was 0
 	
@@ -172,12 +177,14 @@ bool SerialTalker::setup_port(int baud, int data_bits, int stop_bits, bool parit
 		fprintf(stderr, "\nERROR: could not set configuration of port %s\n", m_port.c_str());
 		return false;
 	}
+	fprintf(stderr, "\nconfiguration of port %s set to baud %d\n", m_port.c_str(), baud);
 	return true;
 }
 
 bool SerialTalker::close_port()
 {
 	close(m_fd);
+	fprintf(stderr, "\nport %s closed.\n", m_port.c_str());
 	return true;
 }
 /*
