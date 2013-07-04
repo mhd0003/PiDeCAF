@@ -34,8 +34,9 @@ bool au_uav_ros::XbeeTalker::init(ros::NodeHandle _n)	{
 void au_uav_ros::XbeeTalker::run()	{
 	ROS_INFO("Entering Run");
 
-	//Spin up thread to execute spin()
-	
+	//Spin up thread to execute myTelemCallback()
+	boost::thread broadcastMyTelem(boost::bind(&XbeeTalker::spinThread, this));	
+
 	//Start listening for telemetry and commands, upon receiving proper command
 	//from ground station, execute shutdown and join
 
@@ -51,15 +52,17 @@ void au_uav_ros::XbeeTalker::run()	{
 		if(buffer[0] == 'q')
 			listen = false;
 		printf("%s", buffer);
-		ros::spinOnce();
+		memset(buffer, '\0', 256);
 	}
-	
-	ROS_INFO("Exiting Run.");
 
+	//Shutdown this node.
+	ros::shutdown();
+	broadcastMyTelem.join();	
 }
 
 void au_uav_ros::XbeeTalker::shutdown()	{
-	ROS_INFO("Shutting down Xbee port %s", m_port.c_str());
+	//ROS_INFO("Shutting down Xbee port %s", m_port.c_str());
+	printf("XbeeTalker::Shutting down Xbee port %s", m_port.c_str()); //i ros::shutdown when exiting run
 	m_xbee.close_port();
 }
 
@@ -68,6 +71,13 @@ void au_uav_ros::XbeeTalker::myTelemCallback(std_msgs::String msg)	{
 	ROS_INFO("ding! \n");
 	ROS_INFO("I got: %s\n", msg.data.c_str());
 
+}
+
+//spinner
+void au_uav_ros::XbeeTalker::spinThread()	{
+	ROS_INFO("XbeeTalker::spinThread::Starting spinner thread");
+	//Handle myTelemCallback()
+	ros::spin();	
 }
 
 int main(int argc, char** argv)	{

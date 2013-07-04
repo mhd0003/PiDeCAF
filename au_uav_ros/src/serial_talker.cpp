@@ -174,17 +174,17 @@ bool SerialTalker::setup_port(int baud, int data_bits, int stop_bits, bool parit
 	//
 	if(tcsetattr(m_fd, TCSAFLUSH, &config) < 0)
 	{
-		fprintf(stderr, "\nERROR: could not set configuration of port %s\n", m_port.c_str());
+		fprintf(stderr, "\nSerialTalker::ERROR: could not set configuration of port %s\n", m_port.c_str());
 		return false;
 	}
-	fprintf(stderr, "\nconfiguration of port %s set to baud %d\n", m_port.c_str(), baud);
+	fprintf(stderr, "\nSerialtalker::configuration of port %s set to baud %d\n", m_port.c_str(), baud);
 	return true;
 }
 
 bool SerialTalker::close_port()
 {
 	close(m_fd);
-	fprintf(stderr, "\nport %s closed.\n", m_port.c_str());
+	fprintf(stderr, "\nSerialtalker::port %s closed.\n", m_port.c_str());
 	return true;
 }
 /*
