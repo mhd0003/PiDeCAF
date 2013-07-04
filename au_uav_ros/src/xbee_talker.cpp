@@ -32,8 +32,15 @@ bool au_uav_ros::XbeeTalker::init(ros::NodeHandle _n)	{
 }
 
 void au_uav_ros::XbeeTalker::run()	{
-	//Question: Why is it constantly spitting out INFO msgs in the listen loop?
 	ROS_INFO("Entering Run");
+
+	//Spin up thread to execute spin()
+	
+	//Start listening for telemetry and commands, upon receiving proper command
+	//from ground station, execute shutdown and join
+
+	/*Listening Time! - still has bugs :( */
+	//Question: Why is it constantly spitting out INFO msgs in the listen loop?
 	bool listen = true;
 	char buffer[256];
 	memset(buffer, '\0', 256);
@@ -44,7 +51,9 @@ void au_uav_ros::XbeeTalker::run()	{
 		if(buffer[0] == 'q')
 			listen = false;
 		printf("%s", buffer);
+		ros::spinOnce();
 	}
+	
 	ROS_INFO("Exiting Run.");
 
 }
@@ -55,8 +64,9 @@ void au_uav_ros::XbeeTalker::shutdown()	{
 }
 
 //callbacks
-void au_uav_ros::XbeeTalker::myTelemCallback(const std_msgs::String::ConstPtr &msg)	{
+void au_uav_ros::XbeeTalker::myTelemCallback(std_msgs::String msg)	{
 	ROS_INFO("ding! \n");
+	ROS_INFO("I got: %s\n", msg.data.c_str());
 
 }
 

@@ -24,7 +24,7 @@ namespace au_uav_ros{
 		void shutdown();
 		
 		//calback
-		void myTelemCallback(const std_msgs::String::ConstPtr &msg);	
+		void myTelemCallback(std_msgs::String msg);	
 	};
 }
 #endif
