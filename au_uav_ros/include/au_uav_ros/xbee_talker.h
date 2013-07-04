@@ -2,6 +2,7 @@
 #define XBEE_TALKER_H
 
 
+#include <errno.h>	
 #include <boost/thread.hpp>
 #include "au_uav_ros/serial_talker.h"
 #include "ros/ros.h"
@@ -10,10 +11,9 @@
 /*
  * Possible bug. Unable to contact roscore, need to put in provision?
  *
- *now- seems to not display my reads until i start listening for callbacks?? 
- *
  * What to do if - can't open port
  * 		 - can open port, but need to close? right now only closes on receiving a 'q'
+ * 		 
  */
 
 
@@ -34,12 +34,15 @@ namespace au_uav_ros{
 		bool init(ros::NodeHandle _n);	//Opens  and sets up port, sets up ros stuff .
 		void run();
 		void shutdown();
-		
-		//calback - broadcast my telem message
-		void myTelemCallback(std_msgs::String msg);	
+	
+		//In - reading from xbee/listening
+		void listen();
+
+		//Out - writing to xbee
+		void spinThread();				//spin() and listens for myTelemCallbacks
+		void myTelemCallback(std_msgs::String msg);	//broadcasts my telem messages
 
 		//thread to handle callbacks
-		void spinThread();
 	};
 }
 #endif
