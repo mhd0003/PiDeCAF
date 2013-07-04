@@ -27,18 +27,37 @@ bool au_uav_ros::XbeeTalker::init(ros::NodeHandle _n)	{
 	//Set up Ros stuff.
 	m_node = _n;
 	//dang it. what's a telemetry msg look like?
-	//telem_sub = m_node.subscribe("my_telemetry", 10, my_telem_callback); 
+	telem_sub = m_node.subscribe("my_telemetry", 10, &XbeeTalker::myTelemCallback, this); 
 
 }
 
 void au_uav_ros::XbeeTalker::run()	{
+	//Question: Why is it constantly spitting out INFO msgs in the listen loop?
+	ROS_INFO("Entering Run");
+	bool listen = true;
+	char buffer[256];
+	memset(buffer, '\0', 256);
+	while(listen)	{
+		if(read(m_xbee.getFD(), buffer, 256) == -1)	{
+			ROS_INFO("error in reading");	
+		}	
+		if(buffer[0] == 'q')
+			listen = false;
+		printf("%s", buffer);
+	}
+	ROS_INFO("Exiting Run.");
 
-	
 }
 
 void au_uav_ros::XbeeTalker::shutdown()	{
 	ROS_INFO("Shutting down Xbee port %s", m_port.c_str());
 	m_xbee.close_port();
+}
+
+//callbacks
+void au_uav_ros::XbeeTalker::myTelemCallback(const std_msgs::String::ConstPtr &msg)	{
+	ROS_INFO("ding! \n");
+
 }
 
 int main(int argc, char** argv)	{

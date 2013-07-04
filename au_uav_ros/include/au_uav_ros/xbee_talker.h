@@ -3,6 +3,7 @@
 
 #include "au_uav_ros/serial_talker.h"
 #include "ros/ros.h"
+#include "std_msgs/String.h"
 
 namespace au_uav_ros{
 	class XbeeTalker	{
@@ -17,13 +18,13 @@ namespace au_uav_ros{
 	public:
 		XbeeTalker();
 		XbeeTalker(std::string port, int baud);
-		/*
-		 * init
-		 * Opens  and sets up port, sets up ros stuff .
-		 */
-		bool init(ros::NodeHandle _n);
+		
+		bool init(ros::NodeHandle _n);	//Opens  and sets up port, sets up ros stuff .
 		void run();
 		void shutdown();
+		
+		//calback
+		void myTelemCallback(const std_msgs::String::ConstPtr &msg);	
 	};
 }
 #endif
