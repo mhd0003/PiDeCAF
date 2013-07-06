@@ -52,9 +52,16 @@ generate_messages(DEPENDENCIES
 add_library(serial_talker src/serial_talker.cpp)
 add_library(mavlink_fun src/mavlink_read.cpp)
 #add_executable(xbee src/test.cpp)
+
+#Xbee talker
 add_executable(xbee src/xbee_talker.cpp)
 add_dependencies(xbee ${PROJECT_NAME}_gencpp)
 target_link_libraries(xbee serial_talker mavlink_fun)
+
+#ardu talker
+add_executable(ardu src/ardu_talker.cpp)
+add_dependencies(ardu ${PROJECT_NAME}_gencpp)
+target_link_libraries(ardu serial_talker mavlink_fun)
 
 #add_dependencies(standardDefs ${PROJECT_NAME}_gencpp)
 #add_dependencies(standardFuncs ${PROJECT_NAME}_gencpp)
@@ -83,6 +90,7 @@ target_link_libraries(xbee serial_talker mavlink_fun)
 #)
 
 target_link_libraries(xbee ${catkin_LIBRARIES})
+target_link_libraries(ardu ${catkin_LIBRARIES})
 #target_link_libraries(ripna vmath)
 #target_link_libraries(standardDefs ${BOOST_LIBRARIES})
 #target_link_libraries(planeBuilder standardDefs)
