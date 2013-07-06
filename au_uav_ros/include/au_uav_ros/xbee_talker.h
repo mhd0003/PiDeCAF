@@ -8,6 +8,11 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 
+//mavlink stuff
+#include "mavlink/v1.0/ardupilotmega/mavlink.h"
+#include <au_uav_ros/Telemetry.h>
+//locks
+#include "au_uav_ros/locks_serial.h"
 /*
  * Possible bug. Unable to contact roscore, need to put in provision?
  *
@@ -23,6 +28,14 @@ namespace au_uav_ros{
 		SerialTalker m_xbee;			
 		std::string m_port;
 		int m_baud;
+
+		//mavlink stuff
+		int sysid;
+		int compid;	//i have no idea what these do
+		int serial_compid;
+		bool pc2serial;	
+		int updateIndex;
+		int WPSendSeqNum;
 
 		//ros stuff
 		ros::NodeHandle m_node;
@@ -40,9 +53,11 @@ namespace au_uav_ros{
 
 		//Out - writing to xbee
 		void spinThread();				//spin() and listens for myTelemCallbacks
-		void myTelemCallback(std_msgs::String msg);	//broadcasts my telem messages
+//		void myTelemCallback(std_msgs::String msg);	//broadcasts my telem messages
+		void myTelemCallback(au_uav_ros::Telemetry tUpdate);	//broadcasts my telem messages
 
-		//thread to handle callbacks
+		bool convertMavlinkTelemetryToROS(mavlink_au_uav_t &mavMessage, au_uav_ros::Telemetry &tUpdate); 
+		bool convertROSToMavlinkTelemetry(au_uav_ros::Telemetry &tUpdate, mavlink_au_uav_t &mavMessage); 
 	};
 }
 #endif
