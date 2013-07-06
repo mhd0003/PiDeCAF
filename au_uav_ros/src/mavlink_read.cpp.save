@@ -28,7 +28,7 @@ bool au_uav_ros::mav::convertMavlinkTelemetryToROS(mavlink_au_uav_t &mavMessage,
 	return true;
 }
 
-mavlink_message_t au_uav_ros::mav::readMavlinkFromSerial(SerialTalker &serialIn){
+mavlink_message_t au_uav_ros::mav::readMavlinkFromSerial(SerialTalker serialIn){
 	mavlink_status_t lastStatus;
 	lastStatus.packet_rx_drop_count = 0;
 
@@ -37,17 +37,15 @@ mavlink_message_t au_uav_ros::mav::readMavlinkFromSerial(SerialTalker &serialIn)
 		//if (debug) printf("Checking for new data on serial port\n");
 		// Block until data is available, read only one byte to be able to continue immediately
 		//char buf[MAVLINK_MAX_PACKET_LEN];
-	while(1){
+	while(ros::ok()){
 		uint8_t cp;
 		mavlink_message_t message;
-		message.msgid = 5; //to ensure that we are actually receiving heartbeats
 		mavlink_status_t status;
 		uint8_t msgReceived = false;
 		serialIn.lock();
 		int num = read(serialIn.getFD(), &cp, 1);
-		serialIn.unlock();
-		ROS_INFO("Read %c", (char)cp);
 		//tcflush(fd, TCIFLUSH);
+		mavlink_message_t
 		if (num > 0)
 		{
 			// Check if a message could be decoded, return the message in case yes
@@ -69,10 +67,10 @@ int num = read(_fd, &cp, 1);					unsigned char v=cp;
 		{
 			//if (!silent) fprintf(stderr, "ERROR: Could not read from port %s\n", port.c_str());
 		}
+		
 		// If a message could be decoded, handle it
 		if(msgReceived)
 		{
-			//ROS_INFO("Received message: %d", message.msgid);
 			//if (verbose || debug) std::cout << std::dec << "Received and forwarded serial port message with id " << static_cast<unsigned int>(message.msgid) << " from system " << static_cast<int>(message.sysid) << std::endl;
 			//if (debug) ROS_ERROR("Message sequence #: %d", message.seq);
 			// DEBUG output
@@ -137,12 +135,13 @@ int num = read(_fd, &cp, 1);					unsigned char v=cp;
 			//mavlink_pub.publish(rosmavlink_msg);
 
 			//ROS_ERROR("ID %d", message.msgid);
+			/*
 			if(message.msgid == MAVLINK_MSG_ID_HEARTBEAT)
 			{
 				//ROS_INFO("Delay: %d", delay);
-				//mavlink_heartbeat_t receivedHeartbeat;
-				//mavlink_msg_heartbeat_decode(&message, &receivedHeartbeat);
-				//ROS_INFO("Received heartbeat with ID #%d (type:%d | AP:%d | base:%d | custom:%d | status:%d)\n", message.msgid, receivedHeartbeat.type, receivedHeartbeat.autopilot, receivedHeartbeat.base_mode, receivedHeartbeat.custom_mode, receivedHeartbeat.system_status);
+				mavlink_heartbeat_t receivedHeartbeat;
+				mavlink_msg_heartbeat_decode(&message, &receivedHeartbeat);
+				ROS_INFO("Received heartbeat with ID #%d (type:%d | AP:%d | base:%d | custom:%d | status:%d)\n", message.msgid, receivedHeartbeat.type, receivedHeartbeat.autopilot, receivedHeartbeat.base_mode, receivedHeartbeat.custom_mode, receivedHeartbeat.system_status);
 			}
 			if(message.msgid == MAVLINK_MSG_ID_AU_UAV)
 			{
@@ -153,8 +152,9 @@ int num = read(_fd, &cp, 1);					unsigned char v=cp;
 				mavlink_msg_au_uav_decode(&message, &myMSG);		// decode generic mavlink message into AU_UAV message
 				convertMavlinkTelemetryToROS(myMSG, tUpdate);			// decode AU_UAV mavlink struct into ROS message
 				tUpdate.planeID = message.sysid;				// update planeID
-				ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
+                                ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID,$
 			}
+			*/
 			return message;
 			//TODO: add code here to test if received ack corresponsed to desired target_wp, if not retransmit target_wp
 		

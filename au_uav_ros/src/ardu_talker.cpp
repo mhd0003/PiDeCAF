@@ -4,8 +4,8 @@
 #include <ros/console.h>	//used for debugging
 
 au_uav_ros::ArduTalker::ArduTalker()	{
-	m_port = "dev/ttyUSB0";
-	m_baud = 9600;
+	m_port = "dev/ttyACM0";
+	m_baud = 115200;
 }
 
 au_uav_ros::ArduTalker::ArduTalker(std::string _port, int _baud)	{
@@ -66,29 +66,31 @@ void au_uav_ros::ArduTalker::shutdown()	{
 //---------------------------------------------------------------------------
 
 void au_uav_ros::ArduTalker::listen()	{
-
-//Used for testing	
-	char buffer[256];
-	memset(buffer, '\0', 256);
-	
-	
-	bool keepListening= true;
-
-	while(keepListening)	{
-		if(read(m_ardu.getFD(), buffer, 256) == -1)	{
-			ROS_INFO("error in read fd %s\n", strerror(errno));	
-		}	
-		if(buffer[0] == 'q')
-			keepListening= false;
-		printf("%s", buffer);
-		memset(buffer, '\0', 256);
+	while(ros::ok())
+	{
+		//get a mavlink message from the serial line
+		mavlink_message_t message = au_uav_ros::mav::readMavlinkFromSerial(m_ardu);
+		//decode the message and post it to the appropriate topic
+		if(message.msgid == MAVLINK_MSG_ID_HEARTBEAT)
+		{
+			mavlink_heartbeat_t receivedHeartbeat;
+			mavlink_msg_heartbeat_decode(&message, &receivedHeartbeat);
+			ROS_INFO("Received heartbeat");
+		}
+		if(message.msgid == MAVLINK_MSG_ID_AU_UAV)
+		{
+			//ROS_INFO("Received AU_UAV message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.
+			au_uav_ros::Telemetry tUpdate;
+			mavlink_au_uav_t myMSG;
+			mavlink_msg_au_uav_decode(&message, &myMSG);            // decode generic mavlink message in$
+			au_uav_ros::mav::convertMavlinkTelemetryToROS(myMSG, tUpdate);                   // decode AU_UAV mavlink str$
+			tUpdate.planeID = message.sysid;                                // update planeID
+	  	         ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
+		}
 	}
-
-
-	//publish to m_telem_pub and m_mav_telem_pub 
-
-
 }
+
+
 
 //Output - writing to xbee
 //---------------------------------------------------------------------------
@@ -109,12 +111,12 @@ void au_uav_ros::ArduTalker::spinThread()	{
 
 int main(int argc, char** argv)	{
 
-	std::cout << "helo world!" <<std::endl;
-	std::string port = "/dev/ttyUSB0";
+	std::cout << "hello world!" <<std::endl;
+	std::string port = "/dev/ttyACM0";
 
 	ros::init(argc, argv, "ArduTalker");
 	ros::NodeHandle n;
-	au_uav_ros::ArduTalker talk(port, 9600);
+	au_uav_ros::ArduTalker talk(port, 115200);
 	if(talk.init(n))	//OK. what if the xbee can't be read???
 		talk.run();
 	talk.shutdown();
