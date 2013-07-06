@@ -61,8 +61,10 @@ int SerialTalker::open_port(std::string _port)
 
 bool SerialTalker::setup_port(int baud, int data_bits, int stop_bits, bool parity )
 {
-	//struct termios options;
+	//set baud
+	m_baud =baud;
 	
+	//struct termios options;	
 	struct termios  config;
 	if(!isatty(m_fd))
 	{

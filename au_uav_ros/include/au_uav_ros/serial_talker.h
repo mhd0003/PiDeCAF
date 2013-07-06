@@ -11,6 +11,7 @@
 #include <fcntl.h>   /* File control definitions */
 #include <errno.h>   /* Error number definitions */
 #include <termios.h> /* POSIX terminal control definitions */
+#include <boost/thread.hpp>	//locks
 
 #ifdef __linux
 #include <sys/ioctl.h>
@@ -21,7 +22,6 @@
 class SerialTalker{
 private:
 /*
-	int baud;
 	int sysid;
 	int compid;
 	int serial_compid;
@@ -30,10 +30,10 @@ private:
 */
 	std::string m_port;
 	int m_fd;
-/*		int updateIndex;
-	int WPSendSeqNum;
-	int myMessage[256];
-*/
+	int m_baud;
+
+	boost::mutex m_serialLock;
+
 public:
 	SerialTalker();
 	
@@ -55,8 +55,11 @@ public:
 
 	//Getters
 	int getFD()	{return m_fd;}	
-	std::string getPort() {return m_port;}
-	
+	std::string getPortName() {return m_port;}
+	int getBaud()	{return m_baud;}
+	//Locking
+	void lock()	{ m_serialLock.lock();}	
+	void unlock()	{ m_serialLock.unlock();}	
 	//bool convertMavlinkTelemetryToROS(mavlink_au_uav_t &mavMessage, au_uav_ros::Telemetry &tUpdate);
 	//void* serial_wait(void* serial_ptr);
 };
