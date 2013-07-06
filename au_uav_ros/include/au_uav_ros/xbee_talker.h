@@ -11,8 +11,6 @@
 //mavlink stuff
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
 #include <au_uav_ros/Telemetry.h>
-//locks
-#include "au_uav_ros/locks_serial.h"
 /*
  * Possible bug. Unable to contact roscore, need to put in provision?
  *
