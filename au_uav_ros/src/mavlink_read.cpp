@@ -1,4 +1,32 @@
 #include "au_uav_ros/mavlink_read.h"
+/*
+bool au_uav_ros::ArduTalker::convertROSToMavlinkTelemetry(au_uav_ros::Telemetry &tUpdate, mavlink_au_uav_t &mavMessage)	{
+	
+}
+*/
+bool au_uav_ros::mav::convertMavlinkTelemetryToROS(mavlink_au_uav_t &mavMessage, au_uav_ros::Telemetry &tUpdate) {
+	//tUpdate.planeID = mavlink_ros.planeID;
+	
+	tUpdate.currentLatitude = (mavMessage.au_lat) / 10000000.0;	  /// Lattitude * 10**7 so have to divide by 10^7
+	tUpdate.currentLongitude = (mavMessage.au_lng) / 10000000.0;	  /// Longitude * 10**7 so have to divide by 10^7
+	tUpdate.currentAltitude = (mavMessage.au_alt) / 100.0; 	  /// Altitude in cm so divide by 100 to get meters	
+	
+	tUpdate.destLatitude = (mavMessage.au_target_lat) / 10000000.0;  /// Lattitude * 10**7 so have to divide by 10^7
+	tUpdate.destLongitude = (mavMessage.au_target_lng) / 10000000.0; /// Longitude * 10**7 so have to divide by 10^7
+	tUpdate.destAltitude = (mavMessage.au_target_alt) / 100.0; 	  /// Altitude in cm so divide by 100 to get meters
+
+	tUpdate.groundSpeed = (mavMessage.au_ground_speed) / 100.0; /// Originally in cm / sec so have to convert to mph
+
+	tUpdate.distanceToDestination = mavMessage.au_distance; 	  /// Distance between plane and next waypoint in meters.
+
+	tUpdate.targetBearing = mavMessage.au_target_bearing / 100;	  /// This is the direction to the next waypoint or loiter center in degrees
+
+	tUpdate.currentWaypointIndex = mavMessage.au_target_wp_index;   /// The current waypoint index
+
+//	tUpdate.telemetryHeader.seq = ++updateIndex; //what is update index used for>???
+	tUpdate.telemetryHeader.stamp = ros::Time::now();
+	return true;
+}
 	/*
 	mavlink_status_t lastStatus;
 	lastStatus.packet_rx_drop_count = 0;
