@@ -9,6 +9,7 @@
 #include "std_msgs/String.h"
 
 //mavlink stuff
+#include "au_uav_ros/mavlink_read.h"
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
 #include <au_uav_ros/Telemetry.h>
 /*
@@ -37,6 +38,7 @@ namespace au_uav_ros{
 
 		//ros stuff
 		ros::NodeHandle m_node;
+		ros::Publisher m_telem_pub;
 		ros::Subscriber telem_sub;	//Subscribes to my telemetry msgs
 	public:
 		XbeeTalker();
