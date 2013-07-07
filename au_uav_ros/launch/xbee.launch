@@ -1,3 +1,0 @@
-<launch>
-	<node name="xbee" pkg="au_uav_ros" type="xbee"/>
-</launch>
