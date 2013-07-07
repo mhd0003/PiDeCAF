@@ -16,7 +16,30 @@
 
 namespace au_uav_ros	{
 	namespace mav	{
+
+
+		//Description:
+		//	This function will take a mavlink telemetry message and convert it so that a valid
+		//	ROS telemetry update message is created
+		//Usage:
+		//	Converting mavlink messages received in the ardu node so that they can be used in the
+		//	collision avoidance node
 		bool convertMavlinkTelemetryToROS(mavlink_au_uav_t &mavMessage, au_uav_ros::Telemetry &tUpdate); 
+
+		//Description:
+		//	This function will take a mavlink telemetry message and then set tUpdate to have the same raw,
+		//	unconverted fields. This raw data will be used to create a new mavlink message to send
+		//	at a later point in time
+		//Usage:
+		//	Passing telemetry information received from ardu node to the xbee node so that the telemetry
+		//	information of the running plane can be passed to other planes
+		bool rawMavlinkTelemetryToRawROSTelemetry(mavlink_au_uav_t &mavMessage, au_uav_ros::Telemetry &tUpdate);
+
+		//Description:
+		//	This function will listen in on the serial line provided by SerialTalker and will continue to
+		//	do so until a mavlink message can be decoded. Once a message is decoded, it will be returned
+		//Usage:
+		//	Use to obtain a command/telemetry update from a serial line
 		mavlink_message_t readMavlinkFromSerial(SerialTalker &serialIn);
 	
 	}//end mav
