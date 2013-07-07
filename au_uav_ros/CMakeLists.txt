@@ -63,6 +63,12 @@ add_executable(ardu src/ardu_talker.cpp)
 add_dependencies(ardu ${PROJECT_NAME}_gencpp)
 target_link_libraries(ardu serial_talker mavlink_fun)
 
+#collision avoidance logic
+add_executable(ca_logic src/collision_avoidance_logic.cpp)
+add_dependencies(ca_logic ${PROJECT_NAME}_gencpp)
+#target_link_libraries(ca_logic mavlink_fun)
+
+
 #add_dependencies(standardDefs ${PROJECT_NAME}_gencpp)
 #add_dependencies(standardFuncs ${PROJECT_NAME}_gencpp)
 #add_dependencies(simulator ${PROJECT_NAME}_gencpp)
@@ -91,6 +97,7 @@ target_link_libraries(ardu serial_talker mavlink_fun)
 
 target_link_libraries(xbee ${catkin_LIBRARIES})
 target_link_libraries(ardu ${catkin_LIBRARIES})
+target_link_libraries(ca_logic ${catkin_LIBRARIES})
 #target_link_libraries(ripna vmath)
 #target_link_libraries(standardDefs ${BOOST_LIBRARIES})
 #target_link_libraries(planeBuilder standardDefs)
