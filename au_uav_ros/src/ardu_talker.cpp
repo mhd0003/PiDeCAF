@@ -38,7 +38,7 @@ bool au_uav_ros::ArduTalker::init(ros::NodeHandle _n)	{
 	m_command_sub = m_node.subscribe("ca_command", 10, &ArduTalker::commandCallback, this); 
 	
 	m_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("all_telemetry", 5);
-	m_mav_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("my_mav_telemetry", 5);//the type will need to change
+	m_mav_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("my_mav_telemetry", 5);
 	return true;
 }
 
@@ -80,13 +80,21 @@ void au_uav_ros::ArduTalker::listen()	{
 		if(message.msgid == MAVLINK_MSG_ID_AU_UAV)
 		{
 			//ROS_INFO("Received AU_UAV message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.
-			au_uav_ros::Telemetry tUpdate;
+			au_uav_ros::Telemetry tUpdate, tRawUpdate;
 			mavlink_au_uav_t myMSG;
-			mavlink_msg_au_uav_decode(&message, &myMSG);            // decode generic mavlink message in$
-			au_uav_ros::mav::convertMavlinkTelemetryToROS(myMSG, tUpdate);                   // decode AU_UAV mavlink str$
-			tUpdate.planeID = message.sysid;                                // update planeID
+			mavlink_msg_au_uav_decode(&message, &myMSG);
+			
+			//Post update as new telemetry update
+			au_uav_ros::mav::convertMavlinkTelemetryToROS(myMSG, tUpdate);
+			tUpdate.planeID = message.sysid;
 	  		m_telem_pub.publish(tUpdate);
 		        ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
+
+
+			//Forward raw telemetry update to the xbee_talker node
+			au_uav_ros::mav::rawMavlinkTelemetryToRawROSTelemetry(myMSG, tRawUpdate);
+			tRawUpdate.planeID = message.sysid;
+			m_mav_telem_pub.publish(tRawUpdate);
 		}
 	}
 }
