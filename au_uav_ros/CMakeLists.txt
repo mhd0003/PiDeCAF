@@ -51,6 +51,7 @@ generate_messages(DEPENDENCIES
 #add_library(collisionAvoidance src/collisionAvoidance.cpp include/au_uav_ros/collisionAvoidance.h)
 add_library(serial_talker src/serial_talker.cpp)
 add_library(mavlink_fun src/mavlink_read.cpp)
+add_library(collision_avoidance src/collision_avoidance.cpp)
 #add_executable(xbee src/test.cpp)
 
 #Xbee talker
@@ -63,9 +64,14 @@ add_executable(ardu src/ardu_talker.cpp)
 add_dependencies(ardu ${PROJECT_NAME}_gencpp)
 target_link_libraries(ardu serial_talker mavlink_fun)
 
+#mover
+add_executable(mover src/mover.cpp)
+add_dependencies(mover ${PROJECT_NAME}_gencpp)
+target_link_libraries(mover collision_avoidance)
+
 #collision avoidance logic
-add_executable(ca_logic src/collision_avoidance_logic.cpp)
-add_dependencies(ca_logic ${PROJECT_NAME}_gencpp)
+#add_executable(ca_logic src/collision_avoidance_logic.cpp)
+#add_dependencies(ca_logic ${PROJECT_NAME}_gencpp)
 #target_link_libraries(ca_logic mavlink_fun)
 
 
@@ -97,7 +103,8 @@ add_dependencies(ca_logic ${PROJECT_NAME}_gencpp)
 
 target_link_libraries(xbee ${catkin_LIBRARIES})
 target_link_libraries(ardu ${catkin_LIBRARIES})
-target_link_libraries(ca_logic ${catkin_LIBRARIES})
+target_link_libraries(mover ${catkin_LIBRARIES})
+#target_link_libraries(ca_logic ${catkin_LIBRARIES})
 #target_link_libraries(ripna vmath)
 #target_link_libraries(standardDefs ${BOOST_LIBRARIES})
 #target_link_libraries(planeBuilder standardDefs)
