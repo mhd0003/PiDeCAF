@@ -146,7 +146,7 @@ int num = read(_fd, &cp, 1);					unsigned char v=cp;
 			}
 			if(message.msgid == MAVLINK_MSG_ID_AU_UAV)
 			{
-				ROS_INFO("Received AU_UAV message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.sysid, message.compid);
+				//ROS_INFO("Received AU_UAV message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.sysid, message.compid);
 				
 				au_uav_ros::Telemetry tUpdate;
 				mavlink_au_uav_t myMSG;
