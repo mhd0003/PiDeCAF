@@ -57,7 +57,7 @@ namespace au_uav_ros{
 
 		//Out - writing to ardu 
 		void spinThread();				//spin() and listens for myTelemCallbacks
-		void commandCallback(au_uav_ros::Command update);	//sends commands to ardu
+		void commandCallback(au_uav_ros::Command cmd);	//sends commands to ardu
 
 	};
 }
