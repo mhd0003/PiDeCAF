@@ -46,7 +46,7 @@ mavlink_message_t au_uav_ros::mav::readMavlinkFromSerial(SerialTalker &serialIn)
 		serialIn.lock();
 		int num = read(serialIn.getFD(), &cp, 1);
 		serialIn.unlock();
-		ROS_INFO("Read %c", (char)cp);
+		//ROS_INFO("Read %c", (char)cp);
 		//tcflush(fd, TCIFLUSH);
 		if (num > 0)
 		{
@@ -136,7 +136,7 @@ int num = read(_fd, &cp, 1);					unsigned char v=cp;
 			 
 			//mavlink_pub.publish(rosmavlink_msg);
 
-			//ROS_ERROR("ID %d", message.msgid);
+			ROS_ERROR("ID %d", message.msgid);
 			if(message.msgid == MAVLINK_MSG_ID_HEARTBEAT)
 			{
 				//ROS_INFO("Delay: %d", delay);
