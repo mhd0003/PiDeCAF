@@ -85,7 +85,8 @@ void au_uav_ros::ArduTalker::listen()	{
 			mavlink_msg_au_uav_decode(&message, &myMSG);            // decode generic mavlink message in$
 			au_uav_ros::mav::convertMavlinkTelemetryToROS(myMSG, tUpdate);                   // decode AU_UAV mavlink str$
 			tUpdate.planeID = message.sysid;                                // update planeID
-	  	         ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
+	  		m_telem_pub.publish(tUpdate);
+		        ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
 		}
 	}
 }
@@ -94,13 +95,28 @@ void au_uav_ros::ArduTalker::listen()	{
 
 //Output - writing to xbee
 //---------------------------------------------------------------------------
-void au_uav_ros::ArduTalker::commandCallback(au_uav_ros::Command update)	{
+void au_uav_ros::ArduTalker::commandCallback(au_uav_ros::Command cmd)	{
 	ROS_INFO("ArduTalker::commandCallback::ding! \n");
-	//-----------------
+	//----------------
 	//Callback time! 
 	//----------------
+	mavlink_message_t mavlinkMsg;
+	sysid = cmd.planeID;
+	//stuff mavlinkMsg with the correct paramaters
+	mavlink_msg_mission_item_pack(sysid, compid, &mavlinkMsg, 
+			              sysid, serial_compid, 0, 
+				      MAV_FRAME_GLOBAL, MAV_CMD_NAV_WAYPOINT, 
+				      2, 0, 20.0, 100.0, 1.0, 0.0, 
+				      cmd.latitude, cmd.longitude, cmd.altitude);
 
 	//take command -> send to ardupilot	
+	static uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+	int messageLength = mavlink_msg_to_send_buffer(buffer, &mavlinkMsg);
+	m_ardu.lock();
+	int written = write(m_ardu.getFD(), (char*)buffer, messageLength);
+	m_ardu.unlock();
+	if (messageLength != written) ROS_ERROR("ERROR: Wrote %d bytes but should have written %d\n",
+						written, messageLength);
 }
 
 void au_uav_ros::ArduTalker::spinThread()	{
