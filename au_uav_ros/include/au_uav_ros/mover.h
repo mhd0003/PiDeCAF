@@ -4,7 +4,7 @@
 
 #include <queue>
 #include <boost/thread/mutex.hpp>
-
+#include <boost/thread.hpp>
 
 //collision avoidance library
 #include "au_uav_ros/collision_avoidance.h"
@@ -37,6 +37,12 @@ namespace au_uav_ros	{
 
 			void telem_callback(au_uav_ros::Telemetry telem);
 			void gcs_command_callback(au_uav_ros::Command com);
+
+			//thread stuff
+			void spinThread();
+
+			//main decision making logic
+			void move();
 		public:
 //			CollisionAvoidanceLogic();
 			void init(ros::NodeHandle n);
