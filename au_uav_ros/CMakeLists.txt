@@ -25,7 +25,7 @@ include_directories(include ${BOOST_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 #no glib
 #find_package(GLIB2 REQUIRED)
 #find_Package(GTHREAD2 REQUIRED)
-
+find_package(Boost REQUIRED COMPONENTS thread) #do i need locks? I'm so confused it seems to be workign without this
 
 INCLUDE_DIRECTORIES(
   ${MAVLINK_INCLUDE_DIR}
