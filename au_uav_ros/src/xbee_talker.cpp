@@ -10,8 +10,7 @@ au_uav_ros::XbeeTalker::XbeeTalker()	{
 
 au_uav_ros::XbeeTalker::XbeeTalker(std::string _port, int _baud)	{
 	m_port = _port;
-	m_baud = _baud;	
-	
+	m_baud = _baud;
 }
 
 bool au_uav_ros::XbeeTalker::init(ros::NodeHandle _n)	{
@@ -119,7 +118,22 @@ void au_uav_ros::XbeeTalker::listen()	{
 void au_uav_ros::XbeeTalker::myTelemCallback(au_uav_ros::Telemetry tUpdate)	{
 	ROS_INFO("XbeeTalker::telemCallback::ding! \n");
 
+	mavlink_message_t mavlinkMsg;
+        static uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+	//stuff mavlinkMsg with all the correct paramaters
+	mavlink_msg_au_uav_pack(sysid, compid, &mavlinkMsg, tUpdate.currentLatitude, tUpdate.currentLongitude,
+				tUpdate.currentAltitude, tUpdate.destLatitude, tUpdate.destLongitude, 
+                                tUpdate.destAltitude, tUpdate.groundSpeed, tUpdate.airSpeed, tUpdate.targetBearing,
+				 tUpdate.distanceToDestination, tUpdate.currentWaypointIndex);
 	
+
+        int messageLength = mavlink_msg_to_send_buffer(buffer, &mavlinkMsg);
+        m_xbee.lock();
+        int written = write(m_xbee.getFD(), (char*)buffer, messageLength);
+        m_xbee.unlock();
+        if (messageLength != written) ROS_ERROR("ERROR: Wrote %d bytes but should have written %d\n",
+                                                written, messageLength);
+
 }
 
 void au_uav_ros::XbeeTalker::spinThread()	{
