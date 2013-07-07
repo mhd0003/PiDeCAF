@@ -11,8 +11,8 @@
 #include "ros/ros.h"
 #include "ros/console.h"
 #include "au_uav_ros/serial_talker.h"
-//#include "mavlink/v1.0/common/mavlink.h"
-#include "mavlink/v1.0/ardupilotmega/mavlink.h"
+#include "mavlink/v1.0/common/mavlink.h"
+//#include "mavlink/v1.0/ardupilotmega/mavlink.h"
 
 namespace au_uav_ros	{
 	namespace mav	{
