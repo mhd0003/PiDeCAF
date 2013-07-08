@@ -49,6 +49,20 @@ bool au_uav_ros::mav::rawMavlinkTelemetryToRawROSTelemetry(mavlink_au_uav_t &mav
 }
 
 
+bool au_uav_ros::mav::convertMavlinkCommandToROS(mavlink_mission_item_t receivedCommand, au_uav_ros::Command cmdToForward){
+	//If we are receiveing a command for real planes, it better not be intended for simulated planes
+	cmdToForward.sim = false;
+	cmdToForward.commandID = receivedCommand.command;
+	//What is this for? It is not used when we are converting back to a mavlink message
+	cmdToForward.param = 0;
+	cmdToForward.latitude = receivedCommand.x;
+	cmdToForward.longitude = receivedCommand.y;
+	cmdToForward.altitude = receivedCommand.z;
+	cmdToForward.commandHeader.stamp = ros::Time::now();
+}
+
+
+
 
 mavlink_message_t au_uav_ros::mav::readMavlinkFromSerial(SerialTalker &serialIn){
 	mavlink_status_t lastStatus;

@@ -35,6 +35,18 @@ namespace au_uav_ros	{
 		//	information of the running plane can be passed to other planes
 		bool rawMavlinkTelemetryToRawROSTelemetry(mavlink_au_uav_t &mavMessage, au_uav_ros::Telemetry &tUpdate);
 
+
+
+		//Description:
+		//	This function will take a mavlink command message and then set cmdToForward to have the
+		//	correct data for sending a new waypoint command
+		//Usage:
+		//	Used to take a mavlink message and then convert it to a ROS message so that it can be passed
+		//	to the collision avoidance node
+		bool convertMavlinkCommandToROS(mavlink_mission_item_t receivedCommand, au_uav_ros::Command cmdToForward);
+
+
+
 		//Description:
 		//	This function will listen in on the serial line provided by SerialTalker and will continue to
 		//	do so until a mavlink message can be decoded. Once a message is decoded, it will be returned
