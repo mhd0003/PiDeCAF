@@ -43,7 +43,7 @@ namespace au_uav_ros	{
 		//Usage:
 		//	Used to take a mavlink message and then convert it to a ROS message so that it can be passed
 		//	to the collision avoidance node
-		bool convertMavlinkCommandToROS(mavlink_mission_item_t receivedCommand, au_uav_ros::Command cmdToForward);
+		bool convertMavlinkCommandToROS(mavlink_mission_item_t &receivedCommand, au_uav_ros::Command &cmdToForward);
 
 
 

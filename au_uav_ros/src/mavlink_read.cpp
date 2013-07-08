@@ -49,7 +49,7 @@ bool au_uav_ros::mav::rawMavlinkTelemetryToRawROSTelemetry(mavlink_au_uav_t &mav
 }
 
 
-bool au_uav_ros::mav::convertMavlinkCommandToROS(mavlink_mission_item_t receivedCommand, au_uav_ros::Command cmdToForward){
+bool au_uav_ros::mav::convertMavlinkCommandToROS(mavlink_mission_item_t &receivedCommand, au_uav_ros::Command &cmdToForward){
 	//If we are receiveing a command for real planes, it better not be intended for simulated planes
 	cmdToForward.sim = false;
 	cmdToForward.commandID = receivedCommand.command;
@@ -59,6 +59,7 @@ bool au_uav_ros::mav::convertMavlinkCommandToROS(mavlink_mission_item_t received
 	cmdToForward.longitude = receivedCommand.y;
 	cmdToForward.altitude = receivedCommand.z;
 	cmdToForward.commandHeader.stamp = ros::Time::now();
+	return true;
 }
 
 
@@ -72,10 +73,9 @@ mavlink_message_t au_uav_ros::mav::readMavlinkFromSerial(SerialTalker &serialIn)
 		//if (debug) printf("Checking for new data on serial port\n");
 		// Block until data is available, read only one byte to be able to continue immediately
 		//char buf[MAVLINK_MAX_PACKET_LEN];
-	while(1){
+	while(ros::ok()){
 		uint8_t cp;
 		mavlink_message_t message;
-		message.msgid = 5; //to ensure that we are actually receiving heartbeats
 		mavlink_status_t status;
 		uint8_t msgReceived = false;
 		serialIn.lock();
