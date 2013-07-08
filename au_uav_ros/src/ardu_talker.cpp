@@ -5,7 +5,7 @@
 
 au_uav_ros::ArduTalker::ArduTalker()	{
 	m_port = "dev/ttyACM0";
-	m_baud = 115200;
+	m_baud = 9600;
 }
 
 au_uav_ros::ArduTalker::ArduTalker(std::string _port, int _baud)	{
