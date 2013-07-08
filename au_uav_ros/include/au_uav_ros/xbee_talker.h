@@ -39,6 +39,7 @@ namespace au_uav_ros{
 		//ros stuff
 		ros::NodeHandle m_node;
 		ros::Publisher m_telem_pub;
+		ros::Publisher m_cmd_pub;
 		ros::Subscriber telem_sub;	//Subscribes to my telemetry msgs
 	public:
 		XbeeTalker();

@@ -35,6 +35,7 @@ bool au_uav_ros::XbeeTalker::init(ros::NodeHandle _n)	{
 	//Set up Ros stuff. Todo - update this my_telemetry
 	m_node = _n;
 	m_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("all_telemetry", 5);
+	m_cmd_pub = m_node.advertise<au_uav_ros::Command>("GCS_commands", 5);
 	telem_sub = m_node.subscribe("my_mav_telemetry", 10, &XbeeTalker::myTelemCallback, this); 
 	return true;
 }
@@ -98,7 +99,8 @@ void au_uav_ros::XbeeTalker::listen()	{
                         mavlink_msg_heartbeat_decode(&message, &receivedHeartbeat);
                         ROS_INFO("Received heartbeat");
                 }
-                if(message.msgid == MAVLINK_MSG_ID_AU_UAV)
+                //Received a telemetry update
+		if(message.msgid == MAVLINK_MSG_ID_AU_UAV)
                 {
                         //ROS_INFO("Received AU_UAV message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, mes$
                         au_uav_ros::Telemetry tUpdate;
@@ -110,6 +112,17 @@ void au_uav_ros::XbeeTalker::listen()	{
 			ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID,
 					 tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
                 }
+		//Received a command message, forward it to collision avoidance node
+		if(message.msgid == MAVLINK_MSG_ID_MISSION_ITEM)
+		{
+			au_uav_ros::Command cmdToForward;
+			mavlink_mission_item_t receivedCommand;
+			mavlink_msg_mission_item_decode(&message, &receivedCommand);
+			au_uav_ros::mav::convertMavlinkCommandToROS(receivedCommand, cmdToForward);
+			m_cmd_pub.publish(cmdToForward);
+			ROS_ERROR("Received and forwarded command with ID: %d lat: %f|lng %f|alt%f",cmdToForward.planeID,
+					 cmdToForward.latitude, cmdToForward.longitude, cmdToForward.altitude);
+		}
         }
 }
 
