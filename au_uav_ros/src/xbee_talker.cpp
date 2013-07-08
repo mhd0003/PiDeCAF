@@ -101,7 +101,7 @@ void au_uav_ros::XbeeTalker::listen()	{
 	
 	bool keepListening= true;
 
-	while(keepListening)	{
+	while(keepListening && ros::ok())	{
 		if(read(m_xbee.getFD(), buffer, 256) == -1)	{
 			ROS_INFO("error in read fd %s\n", strerror(errno));	
 		}	
