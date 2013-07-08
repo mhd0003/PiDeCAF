@@ -35,6 +35,8 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 	goal_wp_lock.lock();
 	goal_wp = com;	
 	goal_wp_lock.unlock();
+
+	ca.setGoalWaypoint(com);
 }
 
 void au_uav_ros::Mover::init(ros::NodeHandle n)	{
