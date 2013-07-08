@@ -53,7 +53,7 @@ void au_uav_ros::Mover::init(ros::NodeHandle n)	{
 
 void au_uav_ros::Mover::run()	{
 
-	ROS_INFO("Mover:;Entering Run");
+	ROS_INFO("Entering mover::run()");
 
 	//spin up thread to get callbacks
 	boost::thread spinner(boost::bind(&Mover::spinThread, this));
@@ -66,6 +66,30 @@ void au_uav_ros::Mover::run()	{
 }
 
 void au_uav_ros::Mover::move()	{
+
+	ROS_INFO("Entering mover::move()");	
+	au_uav_ros::Command com;
+
+	//Some shutdown method.. how to??????
+	while(ros::ok())	{
+		//If collision avoidance is NOT EMPTY, that takes precedence
+		bool empty_ca_q = false;
+		ca_wp_lock.lock();
+		empty_ca_q = ca_wp.empty();
+		if(!empty_ca_q)	{
+			com = ca_wp.front();
+			ca_wp.pop_front();	
+		}
+		ca_wp_lock.unlock();	
+
+		//If collision avoidance is empty, send goal_wp
+		if(empty_ca_q)	{
+			com = goal_wp;	
+		}	
+
+		//Sending out command to ardupilot
+		ca_commands.publish(com);
+	}
 }
 
 

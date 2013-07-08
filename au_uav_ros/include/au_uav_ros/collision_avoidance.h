@@ -1,6 +1,10 @@
 #ifndef COLLISION_AVOIDANCE_H
 #define COLLISION_AVOIDANCE_H
 
+#include "ros/ros.h"
+
+
+//Custom ros msgs
 #include "au_uav_ros/Telemetry.h"
 #include "au_uav_ros/Command.h"
 
