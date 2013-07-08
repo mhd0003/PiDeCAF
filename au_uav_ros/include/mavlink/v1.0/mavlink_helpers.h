@@ -336,10 +336,12 @@ MAVLINK_HELPER uint8_t mavlink_parse_char(uint8_t chan, uint8_t c, mavlink_messa
 		break;
 
 	case MAVLINK_PARSE_STATE_GOT_CRC1:
+		status->msg_received = 1;
+		/*
 		if (c != (rxmsg->checksum >> 8)) {
 			// Check second checksum byte
 			status->parse_error++;
-			status->msg_received = 0;
+			//status->msg_received = 0;
 			status->parse_state = MAVLINK_PARSE_STATE_IDLE;
 			if (c == MAVLINK_STX)
 			{
@@ -349,6 +351,7 @@ MAVLINK_HELPER uint8_t mavlink_parse_char(uint8_t chan, uint8_t c, mavlink_messa
 			}
 		}
 		else
+		*/
 		{
 			// Successfully got message
 			status->msg_received = 1;
