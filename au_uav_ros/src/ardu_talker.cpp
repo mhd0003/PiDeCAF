@@ -86,13 +86,13 @@ void au_uav_ros::ArduTalker::listen()	{
 			
 			//Post update as new telemetry update
 			au_uav_ros::mav::convertMavlinkTelemetryToROS(myMSG, tUpdate);
-			tUpdate.planeID = message.sysid;
+			tUpdate.planeID = message.sysid; //i don't think this should be sysid
 	  		m_telem_pub.publish(tUpdate);
 		        ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
 
 
 			//Forward raw telemetry update to the xbee_talker node
-			au_uav_ros::mav::rawMavlinkTelemetryToRawROSTelemetry(myMSG, tRawUpdate);
+//			au_uav_ros::mav::rawMavlinkTelemetryToRawROSTelemetry(myMSG, tRawUpdate);
 			tRawUpdate.planeID = message.sysid;
 			m_mav_telem_pub.publish(tRawUpdate);
 		}
