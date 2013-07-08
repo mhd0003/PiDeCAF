@@ -82,6 +82,9 @@ void au_uav_ros::Mover::move()	{
 		}
 		ca_wp_lock.unlock();	
 
+		//PROBLEM: Don't want to swamp the ardupilot with too many commands. 
+		//Check to see if current destination is any of these, if so, don't send don't send!
+
 		//If collision avoidance is empty, send goal_wp
 		if(empty_ca_q)	{
 			com = goal_wp;	
