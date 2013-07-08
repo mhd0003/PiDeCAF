@@ -17,7 +17,7 @@ void au_uav_ros::Mover::telem_callback(au_uav_ros::Telemetry telem)	{
 void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 	//Add this to the goal_wp q.
 	goal_wp_lock.lock();
-	goal_wp.push(com);	
+	goal_wp = com;	
 	goal_wp_lock.unlock();
 }
 
@@ -49,6 +49,9 @@ void au_uav_ros::Mover::run()	{
 
 void au_uav_ros::Mover::move()	{
 }
+
+
+
 
 
 void au_uav_ros::Mover::spinThread()	{

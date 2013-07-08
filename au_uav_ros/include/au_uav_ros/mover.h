@@ -22,7 +22,7 @@ namespace au_uav_ros	{
 			CollisionAvoidance ca;
 
 			//Queues for Waypoints
-			std::queue<au_uav_ros::Command> goal_wp;	//store goal wps from Ground control 
+			au_uav_ros::Command goal_wp;			//store goal wp from Ground control 
 			std::queue<au_uav_ros::Command> ca_wp;	 	//store collision avoidance waypoints 
 
 			//Locks for Queues
