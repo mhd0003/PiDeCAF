@@ -6,12 +6,28 @@ void au_uav_ros::Mover::telem_callback(au_uav_ros::Telemetry telem)	{
 	//CA will go here.
 	//It's OK to have movement/publishing ca-commands here, since this will be called
 	//when ardupilot publishes *my* telemetry msgs too.
-	au_uav_ros::Command com = ca.avoid(telem);	
 	
-	ca_wp_lock.lock();
-	ca_wp.push(com);	
-	ca_wp_lock.unlock();	
+	au_uav_ros::Command com = ca.avoid(telem);	
 
+	//Check if ca_waypoint should be ignored
+	if(com.latitude == INVALID_GPS_COOR && com.longitude == INVALID_GPS_COOR && com.altitude == INVALID_GPS_COOR)	{
+		//ignore.
+	}		
+	else	{
+		//Check if collision avoidance waypoint should be queued up, or replace all previous ca waypoints.	
+		if(!com.replace)	{
+			ca_wp_lock.lock();
+			ca_wp.push_back(com);	
+			ca_wp_lock.unlock();	
+		}
+		else	{
+			ca_wp_lock.lock();
+			ca_wp.clear();
+			ca_wp.push_back(com);	
+			ca_wp_lock.unlock();	
+		
+		}
+	}
 }
 
 void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
