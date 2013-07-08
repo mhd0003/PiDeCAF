@@ -13,7 +13,7 @@ add_message_files(FILES
 )
 
 add_service_files(FILES
-getPlaneID.srv
+	planeIDGetter.srv
 )
 
 SET(

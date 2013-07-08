@@ -10,8 +10,12 @@
 #include "au_uav_ros/mavlink_read.h"
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+
+//custom msgs
 #include <au_uav_ros/Telemetry.h>
 #include <au_uav_ros/Command.h>
+#include <au_uav_ros/planeIDGetter.h>
+
 //mavlink stuff
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
 /*
@@ -59,6 +63,8 @@ namespace au_uav_ros{
 		void spinThread();				//spin() and listens for myTelemCallbacks
 		void commandCallback(au_uav_ros::Command cmd);	//sends commands to ardu
 
+		//Getplane ID srv
+//		bool getPlaneID(au_uav_ros::getPlaneID
 	};
 }
 #endif
