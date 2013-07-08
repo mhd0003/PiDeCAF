@@ -23,6 +23,9 @@ namespace au_uav_ros	{
 			//Collision Avoidance fun
 			CollisionAvoidance ca;
 
+			//Current telemetry info
+			au_uav_ros::Telemetry my_telem;
+			
 			//Queues for Waypoints
 			au_uav_ros::Command goal_wp;			//store goal wp from Ground control 
 			std::deque<au_uav_ros::Command> ca_wp;	 	//store collision avoidance waypoints 
@@ -34,6 +37,7 @@ namespace au_uav_ros	{
 			//ROS stuff
 			ros::NodeHandle nh;
 			ros::Publisher ca_commands;	//Publish actual CA command waypoints
+			ros::Subscriber my_telem_sub;	//Subscribe to just me telemetry (in raw mav format)
 			ros::Subscriber all_telem;	//Subscribe to all telemetry msgs (me and other planes)
 			ros::Subscriber gcs_commands;	//Subscribe to commands from Ground control
 
@@ -42,7 +46,14 @@ namespace au_uav_ros	{
 			 * Calls CollisionAvoidance's avoid() function.
 			 * Replaces or queues up avoid()'s returned command.
 			 */
-			void telem_callback(au_uav_ros::Telemetry telem);
+			void all_telem_callback(au_uav_ros::Telemetry telem);
+
+			
+			/*
+			 * Callback for incoming telemetry msg only from me
+			 * Updates my current position in Mover
+			 */
+			void my_telem_callback(au_uav_ros::Telemetry telem);
 
 			/*
 			 * callback for any ground control commands.
@@ -56,7 +67,6 @@ namespace au_uav_ros	{
 			//main decision making logic
 			void move();
 		public:
-//			CollisionAvoidanceLogic();
 			void init(ros::NodeHandle n);
 			void run();
 

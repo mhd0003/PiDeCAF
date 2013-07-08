@@ -1,7 +1,8 @@
 #include "au_uav_ros/mover.h"
 
 //callbacks
-void au_uav_ros::Mover::telem_callback(au_uav_ros::Telemetry telem)	{
+//----------------------------------------------------
+void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 
 	//CA will go here.
 	//It's OK to have movement/publishing ca-commands here, since this will be called
@@ -39,13 +40,21 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 	ca.setGoalWaypoint(com);
 }
 
+void au_uav_ros::Mover::my_telem_callback(au_uav_ros::Telemetry telem)	{
+
+}
+
+//node functions
+//----------------------------------------------------
+
 void au_uav_ros::Mover::init(ros::NodeHandle n)	{
 	//Ros stuff
 	nh = n;
 
 	ca_commands = nh.advertise<au_uav_ros::Command>("ca_commands", 10);	
-	all_telem = nh.subscribe("all_telemetry", 20, &Mover::telem_callback, this);	
+	all_telem = nh.subscribe("all_telemetry", 20, &Mover::all_telem_callback, this);	
 	gcs_commands = nh.subscribe("gcs_commands", 20, &Mover::gcs_command_callback, this);	
+	my_telem_sub = nh.subscribe("my_mav_telemetry", 20, &Mover::my_telem_callback, this);
 
 	//CA init
 	ca.init();
@@ -90,8 +99,10 @@ void au_uav_ros::Mover::move()	{
 			com = goal_wp;	
 		}	
 
-		//Sending out command to ardupilot
+		//Sending out command to ardupilot if it's different from current dest
+		
 		ca_commands.publish(com);
+
 	}
 }
 
@@ -103,7 +114,8 @@ void au_uav_ros::Mover::spinThread()	{
 	ROS_INFO("mover::starting spinner thread");
 	ros::spin();
 }
-
+//main
+//----------------------------------------------------
 int main(int argc, char **argv)	{
 	ros::init(argc, argv, "ca_logic");
 	ros::NodeHandle n;
