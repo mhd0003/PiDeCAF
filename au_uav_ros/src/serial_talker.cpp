@@ -116,7 +116,7 @@ bool SerialTalker::setup_port(int baud, int data_bits, int stop_bits, bool parit
 	//Note: Returns as soon as input is available, or if VTIME expires, returns with no chars. -> 
 	//Apparently, conflicts with modem hangup and EOF?? TODO
 	config.c_cc[VMIN]  = 0; //TODO changed from 1 to 0 it was blocking read so it could never get shutdown if no message was sent
-	config.c_cc[VTIME] = 10; // was 0
+	config.c_cc[VTIME] = .5; //wait time in deciseconds 
 	
 	// Get the current options for the port
 	//tcgetattr(m_fd, &options);
