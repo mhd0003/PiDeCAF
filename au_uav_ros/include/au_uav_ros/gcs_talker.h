@@ -1,17 +1,19 @@
-#ifndef XBEE_TALKER_H
-#define XBEE_TALKER_H
+#ifndef GCS_TALKER_H
+#define GCS_TALKER_H
 
 
-#include <errno.h>	
+#include <errno.h>
 #include <boost/thread.hpp>
+
+//ros stuff
 #include "au_uav_ros/serial_talker.h"
+#include "au_uav_ros/mavlink_read.h"
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-
-//mavlink stuff
-#include "au_uav_ros/mavlink_read.h"
-#include "mavlink/v1.0/ardupilotmega/mavlink.h"
 #include <au_uav_ros/Telemetry.h>
+#include <au_uav_ros/Command.h>
+//mavlink stuff
+#include "mavlink/v1.0/ardupilotmega/mavlink.h"
 /*
  * Possible bug. Unable to contact roscore, need to put in provision?
  *
@@ -22,9 +24,9 @@
 
 
 namespace au_uav_ros{
-	class XbeeTalker	{
+	class GCSTalker	{
 	private:
-		SerialTalker m_xbee;			
+		SerialTalker m_gcs;
 		std::string m_port;
 		int m_baud;
 
@@ -38,27 +40,25 @@ namespace au_uav_ros{
 
 		//ros stuff
 		ros::NodeHandle m_node;
+		ros::Subscriber m_command_sub;	//Subscribes to CA commands 
+		
 		ros::Publisher m_telem_pub;
-		ros::Publisher m_cmd_pub;
-		ros::Subscriber telem_sub;	//Subscribes to my telemetry msgs
+		ros::Publisher m_mav_telem_pub;
 	public:
-		XbeeTalker();
-		XbeeTalker(std::string port, int baud);
+		GCSTalker();
+		GCSTalker(std::string port, int baud);
 		
 		bool init(ros::NodeHandle _n);	//Opens  and sets up port, sets up ros stuff .
 		void run();
 		void shutdown();
 	
-		//In - reading from xbee/listening
+		//In - reading from gcs/listening
 		void listen();
 
-		//Out - writing to xbee
+		//Out - writing to ardu 
 		void spinThread();				//spin() and listens for myTelemCallbacks
-//		void myTelemCallback(std_msgs::String msg);	//broadcasts my telem messages
-		void myTelemCallback(au_uav_ros::Telemetry tUpdate);	//broadcasts my telem messages
+		void commandCallback(au_uav_ros::Command cmd);	//sends commands to planes in air
 
-		bool convertMavlinkTelemetryToROS(mavlink_au_uav_t &mavMessage, au_uav_ros::Telemetry &tUpdate); 
-		bool convertROSToMavlinkTelemetry(au_uav_ros::Telemetry &tUpdate, mavlink_au_uav_t &mavMessage); 
 	};
 }
 #endif

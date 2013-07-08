@@ -1,28 +1,28 @@
-#include "au_uav_ros/ardu_talker.h"
+#include "au_uav_ros/gcs_talker.h"
 #include <cstdio> //printf
 #include <string>
 #include <ros/console.h>	//used for debugging
 
-au_uav_ros::ArduTalker::ArduTalker()	{
-	m_port = "dev/ttyACM0";
-	m_baud = 115200;
+au_uav_ros::GCSTalker::GCSTalker()	{
+	m_port = "dev/ttyUSB0";
+	m_baud = 57600;
 }
 
-au_uav_ros::ArduTalker::ArduTalker(std::string _port, int _baud)	{
+au_uav_ros::GCSTalker::GCSTalker(std::string _port, int _baud)	{
 	m_port = _port;
 	m_baud = _baud;	
 	
 }
 
-bool au_uav_ros::ArduTalker::init(ros::NodeHandle _n)	{
+bool au_uav_ros::GCSTalker::init(ros::NodeHandle _n)	{
 	//Open and setup port.
-	if(m_ardu.open_port(m_port) == -1)	{
+	if(m_gcs.open_port(m_port) == -1)	{
 		ROS_INFO("Could not open port %s", m_port.c_str());
 		return false;
 	}
 	else	{
 		ROS_INFO("opened port %s", m_port.c_str());
-		m_ardu.setup_port(m_baud, 8, 1, true);		
+		m_gcs.setup_port(m_baud, 8, 1, true);
 	}
 
 	//mavlink
@@ -35,18 +35,18 @@ bool au_uav_ros::ArduTalker::init(ros::NodeHandle _n)	{
 
 	//Set up Ros stuff. Todo - 
 	m_node = _n;
-	m_command_sub = m_node.subscribe("ca_command", 10, &ArduTalker::commandCallback, this); 
+	m_command_sub = m_node.subscribe("ca_command", 10, &GCSTalker::commandCallback, this);
 	
 	m_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("all_telemetry", 5);
 	m_mav_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("my_mav_telemetry", 5);
 	return true;
 }
 
-void au_uav_ros::ArduTalker::run()	{
+void au_uav_ros::GCSTalker::run()	{
 	ROS_INFO("Entering Run");
 
 	//Spin up thread to execute myTelemCallback()
-	boost::thread sendCommands(boost::bind(&ArduTalker::spinThread, this));	
+	boost::thread sendCommands(boost::bind(&GCSTalker::spinThread, this));
 
 	//Start listening for telemetry and commands, upon receiving proper command
 	//from ground station, execute shutdown and join
@@ -56,20 +56,20 @@ void au_uav_ros::ArduTalker::run()	{
 	sendCommands.join();	
 }
 
-void au_uav_ros::ArduTalker::shutdown()	{
+void au_uav_ros::GCSTalker::shutdown()	{
 	//ROS_INFO("Shutting down Xbee port %s", m_port.c_str());
-	printf("ArduTalker::Shutting down Xbee port %s\n", m_port.c_str()); //i ros::shutdown when exiting run
-	m_ardu.close_port();
+	printf("GCSTalker::Shutting down Xbee port %s\n", m_port.c_str()); //i ros::shutdown when exiting run
+	m_gcs.close_port();
 }
 
-//Input - listening ardu for other telem msgs and gcs commands
+//Input - listening for other telem msgs
 //---------------------------------------------------------------------------
 
-void au_uav_ros::ArduTalker::listen()	{
+void au_uav_ros::GCSTalker::listen()	{
 	while(ros::ok())
 	{
 		//get a mavlink message from the serial line
-		mavlink_message_t message = au_uav_ros::mav::readMavlinkFromSerial(m_ardu);
+		mavlink_message_t message = au_uav_ros::mav::readMavlinkFromSerial(m_gcs);
 		//decode the message and post it to the appropriate topic
 		if(message.msgid == MAVLINK_MSG_ID_HEARTBEAT)
 		{
@@ -103,8 +103,8 @@ void au_uav_ros::ArduTalker::listen()	{
 
 //Output - writing to xbee
 //---------------------------------------------------------------------------
-void au_uav_ros::ArduTalker::commandCallback(au_uav_ros::Command cmd)	{
-	ROS_INFO("ArduTalker::commandCallback::ding! \n");
+void au_uav_ros::GCSTalker::commandCallback(au_uav_ros::Command cmd)	{
+	ROS_INFO("GCSTalker::commandCallback::ding! \n");
 	//----------------
 	//Callback time! 
 	//----------------
@@ -117,18 +117,18 @@ void au_uav_ros::ArduTalker::commandCallback(au_uav_ros::Command cmd)	{
 				      2, 0, 20.0, 100.0, 1.0, 0.0, 
 				      cmd.latitude, cmd.longitude, cmd.altitude);
 
-	//take command -> send to ardupilot	
+	//take command -> send to ardupilots
 	static uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
 	int messageLength = mavlink_msg_to_send_buffer(buffer, &mavlinkMsg);
-	m_ardu.lock();
-	int written = write(m_ardu.getFD(), (char*)buffer, messageLength);
-	m_ardu.unlock();
+	m_gcs.lock();
+	int written = write(m_gcs.getFD(), (char*)buffer, messageLength);
+	m_gcs.unlock();
 	if (messageLength != written) ROS_ERROR("ERROR: Wrote %d bytes but should have written %d\n",
 						written, messageLength);
 }
 
-void au_uav_ros::ArduTalker::spinThread()	{
-	ROS_INFO("ArduTalker::spinThread::Starting spinner thread");
+void au_uav_ros::GCSTalker::spinThread()	{
+	ROS_INFO("GCSTalker::spinThread::Starting spinner thread");
 	//Handle myTelemCallback()
 	ros::spin();	
 }
@@ -136,11 +136,11 @@ void au_uav_ros::ArduTalker::spinThread()	{
 int main(int argc, char** argv)	{
 
 	std::cout << "hello world!" <<std::endl;
-	std::string port = "/dev/ttyACM0";
+	std::string port = "/dev/ttyUSB0";
 
-	ros::init(argc, argv, "ArduTalker");
+	ros::init(argc, argv, "GCSTalker");
 	ros::NodeHandle n;
-	au_uav_ros::ArduTalker talk(port, 115200);
+	au_uav_ros::GCSTalker talk(port, 57600);
 	if(talk.init(n))	//OK. what if the xbee can't be read???
 		talk.run();
 	talk.shutdown();

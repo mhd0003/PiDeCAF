@@ -7,6 +7,7 @@
 
 //ros stuff
 #include "au_uav_ros/serial_talker.h"
+#include "au_uav_ros/mavlink_read.h"
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include <au_uav_ros/Telemetry.h>
@@ -56,7 +57,7 @@ namespace au_uav_ros{
 
 		//Out - writing to ardu 
 		void spinThread();				//spin() and listens for myTelemCallbacks
-		void commandCallback(au_uav_ros::Command update);	//sends commands to ardu
+		void commandCallback(au_uav_ros::Command cmd);	//sends commands to ardu
 
 	};
 }
