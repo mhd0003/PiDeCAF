@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+//Unit testing!
+
 namespace	{
 
 class GetPlaneIDTester: public ::testing::Test	{
@@ -12,7 +14,7 @@ class GetPlaneIDTester: public ::testing::Test	{
 
 };//end GetPlaneIDTester class
 
-TEST_F(GetPlaneIDTester, getPlaneID)	{
+TEST_F(GetPlaneIDTester, something)	{
 
 }
 
