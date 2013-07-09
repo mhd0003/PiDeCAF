@@ -120,6 +120,7 @@ void au_uav_ros::ArduTalker::commandCallback(au_uav_ros::Command cmd)	{
 	//take command -> send to ardupilot	
 	static uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
 	int messageLength = mavlink_msg_to_send_buffer(buffer, &mavlinkMsg);
+	ros::Duration(0.000001).sleep();
 	m_ardu.lock();
 	int written = write(m_ardu.getFD(), (char*)buffer, messageLength);
 	m_ardu.unlock();

@@ -141,6 +141,7 @@ void au_uav_ros::XbeeTalker::myTelemCallback(au_uav_ros::Telemetry tUpdate)	{
 	
 
         int messageLength = mavlink_msg_to_send_buffer(buffer, &mavlinkMsg);
+	ros::Duration(0.000001).sleep();
         m_xbee.lock();
         int written = write(m_xbee.getFD(), (char*)buffer, messageLength);
         m_xbee.unlock();
