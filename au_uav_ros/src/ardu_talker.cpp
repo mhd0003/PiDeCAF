@@ -37,8 +37,8 @@ bool au_uav_ros::ArduTalker::init(ros::NodeHandle _n)	{
 	m_node = _n;
 	m_command_sub = m_node.subscribe("ca_command", 10, &ArduTalker::commandCallback, this); 
 	
-	m_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("all_telemetry", 5);
-	m_mav_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("my_mav_telemetry", 5);
+	m_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("all_telemetry", 2);
+	m_mav_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("my_mav_telemetry", 2);
 	return true;
 }
 
