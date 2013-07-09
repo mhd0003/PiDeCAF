@@ -134,7 +134,7 @@ void au_uav_ros::XbeeTalker::myTelemCallback(au_uav_ros::Telemetry tUpdate)	{
 	mavlink_message_t mavlinkMsg;
         static uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
 	//stuff mavlinkMsg with all the correct paramaters
-	mavlink_msg_au_uav_pack(sysid, compid, &mavlinkMsg, tUpdate.currentLatitude, tUpdate.currentLongitude,
+	mavlink_msg_au_uav_pack(tUpdate.planeID, compid, &mavlinkMsg, tUpdate.currentLatitude, tUpdate.currentLongitude,
 				tUpdate.currentAltitude, tUpdate.destLatitude, tUpdate.destLongitude, 
                                 tUpdate.destAltitude, tUpdate.groundSpeed, tUpdate.airSpeed, tUpdate.targetBearing,
 				 tUpdate.distanceToDestination, tUpdate.currentWaypointIndex);
