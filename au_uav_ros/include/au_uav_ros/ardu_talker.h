@@ -44,6 +44,10 @@ namespace au_uav_ros{
 
 		//plane ID stuff.
 		int planeID;
+		boost::mutex IDSetter;
+		boost::condition_variable cond;
+		bool isIDSet;
+			
 
 		//ros stuff
 		ros::NodeHandle m_node;

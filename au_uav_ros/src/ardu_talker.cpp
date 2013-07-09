@@ -33,8 +33,9 @@ bool au_uav_ros::ArduTalker::init(ros::NodeHandle _n)	{
 	updateIndex = 0;
 	WPSendSeqNum = 0;
 
-	//plane id default
+	//plane id shenanigans 
 	planeID = -1;
+	isIDSet = false;
 
 	//Set up Ros stuff. Todo - 
 	m_node = _n;
@@ -85,10 +86,12 @@ void au_uav_ros::ArduTalker::listen()	{
 		if(message.msgid == MAVLINK_MSG_ID_AU_UAV)
 		{
 			//We know our plane id now!
-			//need to be locked? Don't really want to, for something as insignificant as this and only changed once
-			planeID = message.sysid;
-
-			
+			if(!isIDSet)	{
+				IDSetter.lock();
+				planeID = message.sysid;
+				isIDSet = true;
+				IDSetter.unlock();
+			}
 			//ROS_INFO("Received AU_UAV message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.
 			au_uav_ros::Telemetry tUpdate, tRawUpdate;
 			mavlink_au_uav_t myMSG;
@@ -146,6 +149,12 @@ void au_uav_ros::ArduTalker::spinThread()	{
 //Service
 //------------------------------------------
 bool au_uav_ros::ArduTalker::getPlaneID(au_uav_ros::planeIDGetter::Request &req, au_uav_ros::planeIDGetter::Response &res) {
+
+	//You know what? Might as well stick a conditional variable. In for a penny in for a pound. DOn't push this waiting crap onto other nodes
+	//I don't know enough about boost.
+	boost::unique_lock<boost::mutex> lock(IDSetter);
+	while(!isIDSet)
+		cond.wait(lock);
 	res.planeID = planeID;
 	return true;	
 }
