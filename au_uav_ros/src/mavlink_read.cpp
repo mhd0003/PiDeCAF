@@ -78,6 +78,8 @@ mavlink_message_t au_uav_ros::mav::readMavlinkFromSerial(SerialTalker &serialIn)
 		mavlink_message_t message;
 		mavlink_status_t status;
 		uint8_t msgReceived = false;
+		//sleep for 1E-6 seconds, allows 1E6 readings per second, which is greater than baud rate
+		ros::Duration(0.000001).sleep();
 		serialIn.lock();
 		int num = read(serialIn.getFD(), &cp, 1);
 		serialIn.unlock();
