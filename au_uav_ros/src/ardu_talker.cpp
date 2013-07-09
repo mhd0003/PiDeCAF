@@ -148,6 +148,8 @@ void au_uav_ros::ArduTalker::spinThread()	{
 
 //Service
 //------------------------------------------
+// warning - may block on ardupilot!!! probably not a good thing. SHoudl look into a timed conditional variable... once
+// the time is reached, the thing will return -1 or something
 bool au_uav_ros::ArduTalker::getPlaneID(au_uav_ros::planeIDGetter::Request &req, au_uav_ros::planeIDGetter::Response &res) {
 
 	//You know what? Might as well stick a conditional variable. In for a penny in for a pound. DOn't push this waiting crap onto other nodes
