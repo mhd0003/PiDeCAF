@@ -92,7 +92,7 @@ void au_uav_ros::ArduTalker::listen()	{
 
 
 			//Forward raw telemetry update to the xbee_talker node
-//			au_uav_ros::mav::rawMavlinkTelemetryToRawROSTelemetry(myMSG, tRawUpdate);
+			au_uav_ros::mav::rawMavlinkTelemetryToRawROSTelemetry(myMSG, tRawUpdate);
 			tRawUpdate.planeID = message.sysid;
 			m_mav_telem_pub.publish(tRawUpdate);
 		}
