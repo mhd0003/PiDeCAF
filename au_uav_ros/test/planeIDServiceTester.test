@@ -1,4 +1,5 @@
 <launch>
-	<node name = "planeIDSrv_tester" pkg="au_uav_ros" type = "planeIDServiceTester" output="screen" />
+	<node name="ardu_talker" pkg="au_uav_ros" type="ardu" />
+	<test test-name="planeIDSrv_tester" pkg="au_uav_ros" type = "planeID_tester"  />
 
 </launch>
