@@ -120,6 +120,8 @@ target_link_libraries(mover ${catkin_LIBRARIES})
 #target_link_libraries(guiInterfacer ${catkin_LIBRARIES})
 #target_link_libraries(coordinator ${catkin_LIBRARIES} planeBuilder simPlaneObject planeObject collisionAvoidance vmath)
 
+catkin_add_gtest(collisionAvoidance  test/ca_tester.cpp)
+
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES ${PROJECT_NAME}
