@@ -10,8 +10,12 @@
 #include "au_uav_ros/mavlink_read.h"
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+
+//custom msgs
 #include <au_uav_ros/Telemetry.h>
 #include <au_uav_ros/Command.h>
+#include <au_uav_ros/planeIDGetter.h>
+
 //mavlink stuff
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
 /*
@@ -38,12 +42,20 @@ namespace au_uav_ros{
 		int updateIndex;
 		int WPSendSeqNum;
 
+		//plane ID stuff.
+		int planeID;
+		boost::mutex IDSetter;
+		boost::condition_variable cond;
+		bool isIDSet;
+			
+
 		//ros stuff
 		ros::NodeHandle m_node;
 		ros::Subscriber m_command_sub;	//Subscribes to CA commands 
 		
 		ros::Publisher m_telem_pub;
 		ros::Publisher m_mav_telem_pub;
+		ros::ServiceServer service;
 	public:
 		ArduTalker();
 		ArduTalker(std::string port, int baud);
@@ -59,6 +71,10 @@ namespace au_uav_ros{
 		void spinThread();				//spin() and listens for myTelemCallbacks
 		void commandCallback(au_uav_ros::Command cmd);	//sends commands to ardu
 
+		//Getplane ID srv
+		//Returns "me's" ID. May return -1, if id not initialized yet by ardupilot.
+		bool getPlaneID(au_uav_ros::planeIDGetter::Request &req, 
+				au_uav_ros::planeIDGetter::Response &res); 
 	};
 }
 #endif

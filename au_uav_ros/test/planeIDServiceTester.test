@@ -1,0 +1,4 @@
+<launch>
+	<node name = "planeIDSrv_tester" pkg="au_uav_ros" type = "planeIDServiceTester" output="screen" />
+
+</launch>
