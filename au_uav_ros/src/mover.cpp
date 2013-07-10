@@ -7,7 +7,9 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 	//CA will go here.
 	//It's OK to have movement/publishing ca-commands here, since this will be called
 	//when ardupilot publishes *my* telemetry msgs too.
-	
+
+	//CHECK if it's mine!! then update position
+
 	au_uav_ros::Command com = ca.avoid(telem);	
 
 	//Check if ca_waypoint should be ignored
@@ -40,22 +42,31 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 	ca.setGoalWaypoint(com);
 }
 
-void au_uav_ros::Mover::my_telem_callback(au_uav_ros::Telemetry telem)	{
-
-}
-
 //node functions
 //----------------------------------------------------
 
-void au_uav_ros::Mover::init(ros::NodeHandle n)	{
+bool au_uav_ros::Mover::init(ros::NodeHandle n)	{
 	//Ros stuff
 	nh = n;
 
+	IDclient = nh.serviceClient<au_uav_ros::planeIDGetter>("getPlaneID");
 	ca_commands = nh.advertise<au_uav_ros::Command>("ca_commands", 10);	
 	all_telem = nh.subscribe("all_telemetry", 20, &Mover::all_telem_callback, this);	
 	gcs_commands = nh.subscribe("gcs_commands", 20, &Mover::gcs_command_callback, this);	
 	my_telem_sub = nh.subscribe("my_mav_telemetry", 20, &Mover::my_telem_callback, this);
+	
 
+	//Find out my Plane ID.
+	au_uav_ros::planeIDGetter srv;
+	if(IDclient.call(srv))	{
+		ROS_INFO("mover::init Got plane ID %d", srv.response.planeID);
+		planeID = srv.response.planeID;
+	}
+	else	{
+		ROS_ERROR("mover::init Unsuccessful get plane ID call.");//what to do here.... keep trying?
+		return false;
+	}
+	
 	//CA init
 	ca.init();
 }
