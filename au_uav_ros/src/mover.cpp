@@ -21,7 +21,7 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 			ca_wp.push_back(com);	
 			ca_wp_lock.unlock();	
 		}
-		else	{
+		else{
 			ca_wp_lock.lock();
 			ca_wp.clear();
 			ca_wp.push_back(com);	
@@ -36,7 +36,7 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 	goal_wp_lock.lock();
 	goal_wp = com;	
 	goal_wp_lock.unlock();
-
+	ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
 	ca.setGoalWaypoint(com);
 }
 
@@ -80,9 +80,13 @@ void au_uav_ros::Mover::move()	{
 	au_uav_ros::Command com;
 
 	//Some shutdown method.. how to??????
-	while(ros::ok())	{
+	while(ros::ok()){
 		//If collision avoidance is NOT EMPTY, that takes precedence
 		bool empty_ca_q = false;
+		//attempt to limit the number of commands sent to the ardupilot,
+		//we can still process telemetry updates quickly, but we only send 4 commands
+		//a second
+		ros::Duration(0.25).sleep();
 		ca_wp_lock.lock();
 		empty_ca_q = ca_wp.empty();
 		if(!empty_ca_q)	{
@@ -90,7 +94,6 @@ void au_uav_ros::Mover::move()	{
 			ca_wp.pop_front();	
 		}
 		ca_wp_lock.unlock();	
-
 		//PROBLEM: Don't want to swamp the ardupilot with too many commands. 
 		//Check to see if current destination is any of these, if so, don't send don't send!
 
@@ -105,9 +108,6 @@ void au_uav_ros::Mover::move()	{
 
 	}
 }
-
-
-
 
 
 void au_uav_ros::Mover::spinThread()	{

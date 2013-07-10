@@ -138,6 +138,13 @@ au_uav_ros::waypoint fsquared::findTempForceWaypoint(au_uav_ros::PlaneObject &me
 			}
 		}
 	}
+
+	//msg is from "me", need to update "me"
+	else{
+		me.setCurrentLoc(msg.currentLatitude, msg.currentLongitude, msg.currentAltitude);
+		me.setCurrentBearing(msg.targetBearing);
+	}
+
 	//calculate next direction to travel in
 	au_uav_ros::mathVector resultantForce(0,0), attractiveForce(0,0), repulsiveForce(0,0);
 
