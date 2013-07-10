@@ -18,7 +18,7 @@
 #include <au_uav_ros/planeIDGetter.h>
 
 //mavlink stuff
-#include "mavlink/v1.0/ardupilotmega/mavlink.h"
+#include "mavlink/v1.0/common/mavlink.h"
 /*
  * Possible bug. Unable to contact roscore, need to put in provision?
  *
