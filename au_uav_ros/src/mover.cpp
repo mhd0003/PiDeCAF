@@ -9,12 +9,16 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 	//when ardupilot publishes *my* telemetry msgs too.
 	
 	au_uav_ros::Command com = ca.avoid(telem);	
+	
 
 	//Check if ca_waypoint should be ignored
 	if(com.latitude == INVALID_GPS_COOR && com.longitude == INVALID_GPS_COOR && com.altitude == INVALID_GPS_COOR)	{
 		//ignore.
 	}		
 	else	{
+		
+		//Is this MY telemetry message?
+		
 		//Check if collision avoidance waypoint should be queued up, or replace all previous ca waypoints.	
 		if(!com.replace)	{
 			ca_wp_lock.lock();
@@ -40,9 +44,7 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 	ca.setGoalWaypoint(com);
 }
 
-void au_uav_ros::Mover::my_telem_callback(au_uav_ros::Telemetry telem)	{
-
-}
+	
 
 //node functions
 //----------------------------------------------------
