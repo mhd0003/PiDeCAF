@@ -1,6 +1,6 @@
 #include "au_uav_ros/collision_avoidance.h"
 
-void au_uav_ros::CollisionAvoidance::init()	{
+void au_uav_ros::CollisionAvoidance::init(int planeID)	{
 
 	ROS_INFO("CollisionAvoidance:init()");
 }

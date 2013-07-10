@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(au_uav_ros)
 find_package(catkin REQUIRED
-  COMPONENTS genmsg message_generation std_msgs roscpp rospy roslib
+  COMPONENTS genmsg message_generation std_msgs roscpp rospy roslib rostest
 )
 
 #set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -119,6 +119,15 @@ target_link_libraries(mover ${catkin_LIBRARIES})
 #target_link_libraries(simulator ${catkin_LIBRARIES} simPlaneObject)
 #target_link_libraries(guiInterfacer ${catkin_LIBRARIES})
 #target_link_libraries(coordinator ${catkin_LIBRARIES} planeBuilder simPlaneObject planeObject collisionAvoidance vmath)
+
+#Unit testing (empty for now)
+#catkin_add_gtest(collisionAvoidance  test/ca_tester.cpp)
+
+#Node Testing
+catkin_add_gtest(planeID_tester src/test/planeIDServiceTester.cpp)
+target_link_libraries(planeID_tester ${catkin_LIBRARIES})
+set_target_properties(planeID_tester PROPERTIES OUTPUT_NAME planeID_tester)
+add_rostest(test/planeIDServiceTester.test)
 
 catkin_package(
    INCLUDE_DIRS include

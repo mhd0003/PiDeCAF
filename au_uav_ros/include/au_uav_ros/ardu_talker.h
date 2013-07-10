@@ -4,6 +4,7 @@
 
 #include <errno.h>	
 #include <boost/thread.hpp>
+#include <stdio.h>	//fprintf for debugging
 
 //ros stuff
 #include "au_uav_ros/serial_talker.h"
@@ -42,12 +43,20 @@ namespace au_uav_ros{
 		int updateIndex;
 		int WPSendSeqNum;
 
+		//plane ID stuff.
+		int planeID;
+		boost::mutex IDSetter;
+		boost::condition_variable cond;
+		bool isIDSet;
+			
+
 		//ros stuff
 		ros::NodeHandle m_node;
 		ros::Subscriber m_command_sub;	//Subscribes to CA commands 
 		
 		ros::Publisher m_telem_pub;
 		ros::Publisher m_mav_telem_pub;
+		ros::ServiceServer service;
 	public:
 		ArduTalker();
 		ArduTalker(std::string port, int baud);
@@ -64,7 +73,9 @@ namespace au_uav_ros{
 		void commandCallback(au_uav_ros::Command cmd);	//sends commands to ardu
 
 		//Getplane ID srv
-//		bool getPlaneID(au_uav_ros::getPlaneID
+		//Returns "me's" ID. May return -1, if id not initialized yet by ardupilot.
+		bool getPlaneID(au_uav_ros::planeIDGetter::Request &req, 
+				au_uav_ros::planeIDGetter::Response &res); 
 	};
 }
 #endif
