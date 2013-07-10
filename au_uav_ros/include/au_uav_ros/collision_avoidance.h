@@ -18,8 +18,7 @@ namespace au_uav_ros	{
 		au_uav_ros::PlaneObject me;  //planeObject representation of the plane running this algorithm
 		au_uav_ros::Command goal_wp;
 	public:
-		CollisionAvoidance(){};
-		void init();	
+		void init(int planeID);	
 		/*
 		 * Called by mover's Telem callback. Takes in all telemetry callbacks (including my own).
 		 * Returns desired command, with bool replace field indicating wheter to queue up or replace with new CA waypoint.
