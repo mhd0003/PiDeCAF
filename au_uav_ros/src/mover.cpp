@@ -8,19 +8,14 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 	//It's OK to have movement/publishing ca-commands here, since this will be called
 	//when ardupilot publishes *my* telemetry msgs too.
 
-	//CHECK if it's mine!! then update position
 
 	au_uav_ros::Command com = ca.avoid(telem);	
-	
 
 	//Check if ca_waypoint should be ignored
 	if(com.latitude == INVALID_GPS_COOR && com.longitude == INVALID_GPS_COOR && com.altitude == INVALID_GPS_COOR)	{
 		//ignore.
 	}		
 	else	{
-		
-		//Is this MY telemetry message?
-		
 		//Check if collision avoidance waypoint should be queued up, or replace all previous ca waypoints.	
 		if(!com.replace)	{
 			ca_wp_lock.lock();
@@ -60,6 +55,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n)	{
 	
 
 	//Find out my Plane ID.
+	//-> need timed call? or keep trying to get plane id???
 	au_uav_ros::planeIDGetter srv;
 	if(IDclient.call(srv))	{
 		ROS_INFO("mover::init Got plane ID %d", srv.response.planeID);
@@ -134,8 +130,8 @@ int main(int argc, char **argv)	{
 	ros::init(argc, argv, "ca_logic");
 	ros::NodeHandle n;
 	au_uav_ros::Mover mv;
-	mv.init(n);
-	mv.run();	
+	if(mv.init(n))
+		mv.run();	
 	//spin and do move logic in separate thread
 
 }

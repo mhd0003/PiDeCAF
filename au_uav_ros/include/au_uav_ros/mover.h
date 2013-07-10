@@ -25,7 +25,6 @@ namespace au_uav_ros	{
 			//Collision Avoidance fun
 			CollisionAvoidance ca;
 
-			au_uav_ros::Telemetry my_telem;			//current telem info
 			int planeID;					//current plane id
 
 			//Queues for Waypoints
@@ -64,6 +63,7 @@ namespace au_uav_ros	{
 			//main decision making logic
 			void move();
 		public:
+			int getPlaneID() {return planeID;} 
 			bool init(ros::NodeHandle n);
 			void run();
 
