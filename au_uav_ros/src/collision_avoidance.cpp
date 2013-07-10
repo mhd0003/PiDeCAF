@@ -15,7 +15,7 @@ au_uav_ros::Command au_uav_ros::CollisionAvoidance::avoid(au_uav_ros::Telemetry 
 
 	//Make new command from the calculated waypoint
 	//newCmd.stamp = ros::Time::now();
-	//newCmd.planeId = me.getID();******************************************************************************************************************WHYYYYYYYY****************************************
+	newCmd.planeID = me.getID();
 	newCmd.param = 2;
 	newCmd.latitude = me.getCurrentLoc().latitude;
 	newCmd.longitude = me.getCurrentLoc().longitude;

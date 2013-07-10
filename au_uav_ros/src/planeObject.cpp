@@ -31,7 +31,7 @@ PlaneObject::PlaneObject() {
 	this->tempForceWaypoint = destination;
 	this->collisionRadius = 0.0;
 	this->setField(0,0); //initialize field to default configuration
-	//this->planesToAvoid = new std::map<int, AU_UAV_ROS::PlaneObject>();
+	//this->planesToAvoid = new std::map<int, PlaneObject>();
 	planesToAvoid.clear();
 }
 
@@ -80,7 +80,7 @@ PlaneObject::PlaneObject(double cRadius, const Telemetry &msg) {
 	this->lastUpdateTime = ros::Time::now().toSec();
 	this->collisionRadius = cRadius;
 	this->setField(0,0); //initialize field to default configuration
-	//this->planesToAvoid = new std::map<int, AU_UAV_ROS::PlaneObject>();
+	//this->planesToAvoid = new std::map<int, PlaneObject>();
 	planesToAvoid.clear();
 }
 
@@ -313,13 +313,82 @@ using this plane as the origin */
 double PlaneObject::findAngle(double lat2, double lon2) const {
 	double xdiff = (lon2 - this->currentLoc.longitude)*DELTA_LON_TO_METERS;
 	double ydiff = (lat2 - this->currentLoc.latitude)*DELTA_LAT_TO_METERS;
-	
-	return atan2(ydiff, xdiff);
+
+	//Get angle in degrees, in range [-180 to 180] in cartesian coordinate frame
+	double degrees =  atan2(ydiff, xdiff)*180.0/PI;
+
+	//added in an attempt to get test to work
+	return degrees;
+
+}
+
+//FIELD METHODS
+
+
+/*This method will adjust the field of the plane to specifications provided by the arguments
+ * TODO:
+ * 		DELETE PREVIOUS FIELD
+ * 		Enable choosing multiple field setups, this method will currently only call one field type
+ */
+void PlaneObject::setField(int encodedFieldShape, int encodedFieldFunction){
+
+}
+
+ForceField PlaneObject::getField(){
+	return this->planeField;
+}
+/*
+double PlaneObject::findMyFieldForceMagnitude(fsquared::relativeCoordinates relativePosition){
+	return planeField->findFieldForceMagnitude(relativePosition);
 }
 
 
-PlaneObject& PlaneObject::operator=(const PlaneObject& plane) {
+bool PlaneObject::isInMyField(fsquared::relativeCoordinates relativePosition, double fieldAngle){
+	return planeField->isrelativeCoordinatesInMyField(relativePosition, fieldAngle);
+}
+*/
 
+
+/*Accessor method for planesToAvoid map */
+
+std::map<int, PlaneObject> & PlaneObject::getMap()	{
+	return planesToAvoid; 		
+}
+
+/* 
+* 
+*Insert plane. Copy by value. If it exists, will update the existing plane.
+*After adding plane, will clear its map to prevent infinite loop of planes with maps with planes...
+*
+*
+*/
+void PlaneObject::planeIn_updateMap(PlaneObject plane)	{
+	(planesToAvoid)[plane.getID()]  = plane;
+	plane.clearMap();
+}
+
+/*
+ * Empties plane's map of other planes which is exerting a force.
+ */
+void PlaneObject::clearMap()	{
+	planesToAvoid.clear();
+}
+
+/* Ensure plane is not in the map */
+void PlaneObject::planeOut_updateMap(PlaneObject &plane)	{
+
+	//If plane is in map, TAKE IT OUT arggghh
+	std::map<int, PlaneObject> ::iterator it;
+	int plane_id = plane.getID();
+	it = planesToAvoid.find(plane_id);
+	if(it != planesToAvoid.end())
+		planesToAvoid.erase(it);
+}
+
+// TODO: Add equality check for force field
+PlaneObject& PlaneObject::operator=(const PlaneObject& plane) {
+	if(this == &plane)
+	        return *this;
 	this->id = plane.id;
 	this->currentLoc.altitude = plane.currentLoc.altitude;
 	this->currentLoc.latitude = plane.currentLoc.latitude;

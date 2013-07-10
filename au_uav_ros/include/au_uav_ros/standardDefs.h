@@ -49,7 +49,7 @@ namespace au_uav_ros
 		int planeID;
 	};
 
-	boost::mutex serialPort;
+	//boost::mutex serialPort;
 }
 
 /*
