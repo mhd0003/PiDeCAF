@@ -180,3 +180,38 @@ au_uav_ros::mathVector& au_uav_ros::mathVector::operator=(const au_uav_ros::math
 }
 
 
+
+
+
+
+/*find angle between two vectors, returns degrees
+-180 < x < 0 if mV is CCW of this
+0 < x < 180 if mV is CW of this
+*/
+
+double au_uav_ros::mathVector::findAngleBetween(const au_uav_ros::mathVector& mV)	{
+	double rawDifference, finalAngle;
+	
+	//Force angles to be [0,360]
+	double this_direction = forceAngle360(this->direction);
+	double mV_direction = forceAngle360(mV.direction);
+	if(this_direction > mV_direction)	{
+		rawDifference = this_direction- mV_direction;
+		//Other is CCW from this
+		if(rawDifference > 180)
+			finalAngle = -(360 - rawDifference); 
+		//Other is CW from this	
+		else
+			finalAngle = rawDifference;
+	}
+	else	{
+		rawDifference = mV_direction - this_direction;
+		//Other is CW from this
+		if(rawDifference > 180)	
+			finalAngle = (360 - rawDifference);
+		//Other is CCW from this
+		else
+			finalAngle = -(rawDifference);
+	}
+	return finalAngle;
+}

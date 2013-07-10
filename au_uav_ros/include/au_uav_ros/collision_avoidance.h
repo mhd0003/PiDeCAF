@@ -9,12 +9,16 @@
 #include "au_uav_ros/Command.h"
 
 #include "au_uav_ros/pi_standard_defs.h"
+#include "au_uav_ros/planeObject.h"
+#include "au_uav_ros/Fsquared.h"
 
 namespace au_uav_ros	{
 	class CollisionAvoidance	{
 	private:
+		au_uav_ros::PlaneObject me;  //planeObject representation of the plane running this algorithm
 		au_uav_ros::Command goal_wp;
 	public:
+		CollisionAvoidance(){};
 		void init();	
 		/*
 		 * Called by mover's Telem callback. Takes in all telemetry callbacks (including my own).

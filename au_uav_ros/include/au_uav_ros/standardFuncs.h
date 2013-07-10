@@ -10,6 +10,9 @@ throughout the code. Note: All angles are in degrees. */
 #define DELTA_LAT_TO_METERS 111200
 #define DELTA_LON_TO_METERS 93670
 
+#define METERS_TO_DELTA_LAT (1.0/DELTA_LAT_TO_METERS)
+#define METERS_TO_DELTA_LON (1.0/DELTA_LON_TO_METERS)
+
 #include "au_uav_ros/standardDefs.h" /* for EARTH_RADIUS in meters */
 const double PI = 4.0*atan(1.0);
 const double DEGREE_TO_RAD = PI/180.0; /* convert degrees to radians */
@@ -36,6 +39,13 @@ namespace au_uav_ros{
 }
 
 
+/*
+Credit: 2012 APF group
+Takes the current location in the form of a waypoint, and given a bearing and angular distance, calculates
+a new waypoint at that specified bearing and distance away.
+*/
+au_uav_ros::waypoint calculateCoordinate(au_uav_ros::waypoint currentPosition, double bearing, double distance);
+
 /* Takes the bearing given by the UAV that is based off of Cardinal directions and converts
 it to the equivalent bearing in the Cartesian plane.  Returns a value on the interval [-180, 180]. */
 double toCartesian(double UAVBearing);
@@ -43,6 +53,9 @@ double toCartesian(double UAVBearing);
 /* Takes an angle based on the Cartestian plane and converts to the equivalent 
 Cardinal direction.  Returns a value on the interval [-180, 180]. */
 double toCardinal(double angle);
+
+//Manipulate angle so it is always on interval [0, 360)
+double forceAngle360(double angle);
 
 /* Manipulates the angle parameter so it is always on the interval [-180, 180]. */
 double manipulateAngle(double angle);

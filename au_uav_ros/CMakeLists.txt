@@ -43,7 +43,7 @@ generate_messages(DEPENDENCIES
 #add_library(standardDefs src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
 #add_library(planeBuilder src/planeBuilder.cpp include/au_uav_ros/planeBuilder.h src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
 #add_library(planeBuilder src/planeBuilder.cpp include/au_uav_ros/planeBuilder.h)
-#add_library(planeObject src/planeObject.cpp include/au_uav_ros/planeObject.h src/standardFuncs.cpp include/au_uav_ros/standardFuncs.h src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
+add_library(planeObject src/planeObject.cpp  src/standardFuncs.cpp  src/standardDefs.cpp )
 #add_library(planeObject src/planeObject.cpp include/au_uav_ros/planeObject.h)
 #add_library(simPlaneObject src/simPlaneObject.cpp include/au_uav_ros/simPlaneObject.h)
 #add_library(vmath src/vmath.cpp include/au_uav_ros/vmath.h)
@@ -52,6 +52,10 @@ generate_messages(DEPENDENCIES
 add_library(serial_talker src/serial_talker.cpp)
 add_library(mavlink_fun src/mavlink_read.cpp)
 add_library(collision_avoidance src/collision_avoidance.cpp)
+
+#add_library(fsquared src/Fsquared.cpp src/vmath.cpp src/ForceField.cpp)
+
+
 #add_executable(xbee src/test.cpp)
 
 #Xbee talker
@@ -68,15 +72,17 @@ target_link_libraries(ardu serial_talker mavlink_fun)
 add_executable(gcs src/gcs_talker.cpp)
 add_dependencies(gcs ${PROJECT_NAME}_gencpp)
 target_link_libraries(gcs serial_talker mavlink_fun)
+
 #mover
 add_executable(mover src/mover.cpp)
 add_dependencies(mover ${PROJECT_NAME}_gencpp)
-target_link_libraries(mover collision_avoidance)
+target_link_libraries(mover planeObject collision_avoidance)
+
 
 #collision avoidance logic
 #add_executable(ca_logic src/collision_avoidance_logic.cpp)
 #add_dependencies(ca_logic ${PROJECT_NAME}_gencpp)
-#target_link_libraries(ca_logic mavlink_fun)
+#target_link_libraries(ca_logic mavlink_fun fsquared)
 
 
 #add_dependencies(standardDefs ${PROJECT_NAME}_gencpp)

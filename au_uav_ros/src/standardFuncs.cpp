@@ -8,6 +8,38 @@ are related to implementation, not usage.
 #include "au_uav_ros/standardFuncs.h"
 
 
+
+au_uav_ros::waypoint calculateCoordinate(au_uav_ros::waypoint currentPosition, double bearing, double distance){
+	// Calculate final latitude and longitude; see movable-type.co.uk/scripts/latlong.html for more detail
+	bearing *= DEGREES_TO_RADIANS; // convert angle of force to radians
+
+	double lat1 = currentPosition.latitude*DEGREES_TO_RADIANS; // lat1 = current latitude in radians
+	double dLat = distance*cos(bearing); // calculate change in latitude
+	double lat2 = lat1 + dLat; // calculate final latitude
+	double dPhi = log(tan(lat2/2+PI/4)/tan(lat1/2+PI/4));
+	double q = (!(dPhi < 0.0001)) ? dLat/dPhi : cos(lat1);  // East-West line gives dPhi=0
+	double dLon = distance*sin(bearing)/q; // calculate change in longitude
+
+	// check for some daft bugger going past the pole, normalise latitude if so
+	if (abs(lat2) > PI/2)
+		lat2 = lat2>0 ? PI-lat2 : -(PI-lat2);
+
+	double lon2 = (currentPosition.longitude*DEGREES_TO_RADIANS+dLon) * RADIANS_TO_DEGREES; // calculate final latitude and convert to degrees
+
+	//wrap around if necessary to ensure final longitude is on the interval [-180, 180]
+	lon2 = manipulateAngle(lon2);
+
+	lat2 *= RADIANS_TO_DEGREES; // convert final latitude to degrees
+
+	au_uav_ros::waypoint coordinate;
+	coordinate.latitude = lat2;
+	coordinate.longitude = lon2;
+	coordinate.altitude = currentPosition.altitude;
+
+	return coordinate;
+}
+
+
 /* Convert Cardinal direction to an angle in the Cartesian plane */
 double toCartesian(double UAVBearing){
 	UAVBearing = manipulateAngle(UAVBearing); /* get angle on the interval [-180, 180] */
@@ -38,6 +70,19 @@ double toCardinal(double angle){
 		return -999; /* should never happen in current setup */ 
 }
 
+double forceAngle360(double angle){
+	while (angle > 360){
+		/* decrease angle by one 360 degree cycle */
+		angle-=360;
+	}
+
+	while (angle < 0){
+		/* increase angle by one 360 degree cycle cycle */
+		angle+=360;
+	}
+
+	return angle;
+}
 /* Modify the angle so that it remains on the interval [-180, 180] */
 double manipulateAngle(double angle){
 	while (angle > 180.0){

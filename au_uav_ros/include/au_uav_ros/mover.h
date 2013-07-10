@@ -1,3 +1,4 @@
+
 #ifndef MOVER_H 
 #define MOVER_H 
 
@@ -8,8 +9,9 @@
 
 //collision avoidance library
 #include "au_uav_ros/collision_avoidance.h"
-
+#include "au_uav_ros/planeObject.h"
 #include "au_uav_ros/pi_standard_defs.h"
+#include "au_uav_ros/Fsquared.h"
 
 //ros stuff
 #include "ros/ros.h"

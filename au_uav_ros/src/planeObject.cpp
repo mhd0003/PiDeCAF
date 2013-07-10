@@ -1,10 +1,19 @@
+/* Implementation of planeObject.h
+
+*/
+
+#include "ros/ros.h"
 #include "au_uav_ros/planeObject.h"
+#include <math.h>
+#include "au_uav_ros/standardFuncs.h" /* for PI, EARTH_RADIUS in meters */
+//#include "AU_UAV_ROS/ForceField.h"
+#include <math.h>
 using namespace au_uav_ros;
 
+
 /* Implementation of the default constructor: Member variables are set to zero */
-PlaneObject::PlaneObject(void) {
+PlaneObject::PlaneObject() {
 	this->id = 0;
-	this->commandIndex = 0;
 	this->currentLoc.altitude = 0.0;
 	this->currentLoc.latitude = 0.0;
 	this->currentLoc.longitude = 0.0;
@@ -19,13 +28,15 @@ PlaneObject::PlaneObject(void) {
 	//this->destination.longitude = 0.0;
 	//this->destination.altitude = 0.0;
 	this->lastUpdateTime = ros::Time::now().toSec();
+	this->tempForceWaypoint = destination;
 	this->collisionRadius = 0.0;
-
+	this->setField(0,0); //initialize field to default configuration
+	//this->planesToAvoid = new std::map<int, AU_UAV_ROS::PlaneObject>();
+	planesToAvoid.clear();
 }
 
 PlaneObject::PlaneObject(int _id, struct waypoint wp) {
 	this->id = _id;
-	this->commandIndex = 0;
 	this->currentLoc.altitude = 0.0;
 	this->currentLoc.latitude = 0.0;
 	this->currentLoc.longitude = 0.0;
@@ -68,6 +79,9 @@ PlaneObject::PlaneObject(double cRadius, const Telemetry &msg) {
 	this->normalPath.push_back(wp);
 	this->lastUpdateTime = ros::Time::now().toSec();
 	this->collisionRadius = cRadius;
+	this->setField(0,0); //initialize field to default configuration
+	//this->planesToAvoid = new std::map<int, AU_UAV_ROS::PlaneObject>();
+	planesToAvoid.clear();
 }
 
 /* mutator functions to update member variables */
@@ -104,13 +118,16 @@ void PlaneObject::setDestination(const waypoint &destination) {
 	this->avoidancePath.push_front(destination);
 }
 
+void PlaneObject::setTempForceWaypoint(const waypoint &tempForceWaypoint){
+	this->tempForceWaypoint = tempForceWaypoint;
+}
 
 void PlaneObject::updateTime(void) {
 	this->lastUpdateTime = ros::Time::now().toSec();
 }
 
 
-bool PlaneObject::update(const Telemetry &msg, Command &newCommand) { /*TODO CLEAN THIS UP */
+bool PlaneObject::update(const Telemetry &msg, Command &newCommand) {
 	//Update previous and current position
 	this->setPreviousLoc(this->currentLoc.latitude, this->currentLoc.longitude, this->currentLoc.altitude);
 	this->setCurrentLoc(msg.currentLatitude, msg.currentLongitude, msg.currentAltitude);
@@ -205,7 +222,7 @@ bool PlaneObject::update(const Telemetry &msg, Command &newCommand) { /*TODO CLE
 	if(isCommand)
 	{
 		//the current waypoint is incorrect somehow, send corrective command
-		newCommand.commandHeader.seq = this->commandIndex++;
+		//newCommand.commandHeader.seq = this->commandIndex++;
 		newCommand.commandHeader.stamp = ros::Time::now();
 		newCommand.planeID = id;//this->latestUpdate.planeID;
 		newCommand.latitude = destination.latitude;
@@ -220,6 +237,12 @@ bool PlaneObject::update(const Telemetry &msg, Command &newCommand) { /*TODO CLE
 		return false;
 	}
 }
+
+
+void PlaneObject::setField(ForceField  newField){
+	planeField = newField;
+}
+
 
 /* accessor functions */
 int PlaneObject::getID(void) const {
@@ -250,9 +273,11 @@ double PlaneObject::getLastUpdateTime(void) const {
 	return this->lastUpdateTime;
 }
 
+/*
 int PlaneObject::getCommandIndex(void) const {
 	return this->commandIndex;
 }
+*/
 
 waypoint PlaneObject::getDestination(void) const {
 	if (avoidancePath.size() > 0 ) {
@@ -318,7 +343,7 @@ PlaneObject& PlaneObject::operator=(const PlaneObject& plane) {
 	return *this;
 }
 
-void PlaneObject::addWp(struct au_uav_ros::waypoint wp, bool normal) {
+void PlaneObject::addWp(struct waypoint wp, bool normal) {
 	if (normal) {
 		normalPath.push_back(wp);
 	} else {
@@ -326,7 +351,7 @@ void PlaneObject::addWp(struct au_uav_ros::waypoint wp, bool normal) {
 	}
 }
 
-void PlaneObject::removeWp(struct au_uav_ros::waypoint wp, bool normal) {
+void PlaneObject::removeWp(struct waypoint wp, bool normal) {
 	if (normal) {
 		//normalPath.remove(wp);
 		std::list<waypoint>::iterator i;
@@ -386,7 +411,7 @@ Command PlaneObject::getPriorityCommand(void) {
 	}
 
 	//fill out our header and return this bad boy
-	ret.commandHeader.seq = this->commandIndex++;
+	//ret.commandHeader.seq = this->commandIndex++;
 	ret.commandHeader.stamp = ros::Time::now();
 	return ret;
 }
