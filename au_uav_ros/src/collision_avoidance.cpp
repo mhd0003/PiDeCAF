@@ -11,19 +11,19 @@ void au_uav_ros::CollisionAvoidance::init(int planeID)	{
 
 //TODO: Add some method to not resend commands when the waypoint has not changed?
 au_uav_ros::Command au_uav_ros::CollisionAvoidance::avoid(au_uav_ros::Telemetry telem)	{
-	ROS_INFO("CollisionAvoidance::avoid() me position: %f, %f | me destination: %f, %f", me.getCurrentLoc().latitude, me.getCurrentLoc().longitude,
+	ROS_INFO("CollisionAvoidance::avoid() me position: %f, %f, %f | me destination: %f, %f", me.getCurrentLoc().latitude, me.getCurrentLoc().longitude, me.getCurrentLoc().altitude,
 											me.getDestination().latitude, me.getDestination().longitude);
 	au_uav_ros::Command newCmd;
 
 	au_uav_ros::waypoint tempForceWaypoint = fsquared::findTempForceWaypoint(me, telem);
-
 	//Make new command from the calculated waypoint
 	//newCmd.stamp = ros::Time::now();
 	newCmd.planeID = me.getID();
+	newCmd.commandID = 2;
 	newCmd.param = 2;
-	newCmd.latitude = me.getCurrentLoc().latitude;
-	newCmd.longitude = me.getCurrentLoc().longitude;
-	newCmd.altitude =me.getCurrentLoc().altitude;
+	newCmd.latitude = tempForceWaypoint.latitude;
+	newCmd.longitude = tempForceWaypoint.longitude;
+	newCmd.altitude = me.getDestination().altitude;
 	newCmd.replace = true;
 	return newCmd;
 }
