@@ -10,22 +10,17 @@ class test_id_srv : public :: testing::Test	{
 	virtual void SetUp()	{
 		client = n.serviceClient<au_uav_ros::planeIDGetter>("getPlaneID");		
 			
-
-
 	}
 
-
+	virtual void TearDown()	{
+		ros::shutdown();
+	}
 
 	//stuff
 	ros::NodeHandle n;
 	ros::ServiceClient client;
-	
-
 
 };
-
-
-
 
 
 }
@@ -34,11 +29,16 @@ TEST_F(test_id_srv, getPlaneID)	{
 
 	//wow this is confusing.
 	//So, if the ardupilot port can't even be opened, the id will be returned as 0??? what's happening?
-	au_uav_ros::planeIDGetter srv;
-	client.call(srv);
-	EXPECT_FALSE(srv.response.planeID == -1) << "PlaneID is" << srv.response.planeID;
 
-	std::cout << "Plane id is " << srv.response.planeID;	
+	ros::Duration(30).sleep(); //The other callback is saying it's got 32, but I'm getting a FALSE for client call success.
+
+	au_uav_ros::planeIDGetter srv;
+	EXPECT_TRUE(client.call(srv)) << "Client Call DID NOT Succeed";
+	EXPECT_FALSE(srv.response.planeID == -1);
+	EXPECT_TRUE(srv.response.planeID == (long int)32);
+
+	fprintf(stderr, "planeIDTESTER::Plane ID is %d", srv.response.planeID);
+
 }
 
 

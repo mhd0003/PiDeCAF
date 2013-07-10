@@ -4,6 +4,7 @@
 
 #include <errno.h>	
 #include <boost/thread.hpp>
+#include <stdio.h>	//fprintf for debugging
 
 //ros stuff
 #include "au_uav_ros/serial_talker.h"

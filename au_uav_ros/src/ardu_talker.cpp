@@ -15,16 +15,6 @@ au_uav_ros::ArduTalker::ArduTalker(std::string _port, int _baud)	{
 }
 
 bool au_uav_ros::ArduTalker::init(ros::NodeHandle _n)	{
-	//Open and setup port.
-	if(m_ardu.open_port(m_port) == -1)	{
-		ROS_INFO("Could not open port %s", m_port.c_str());
-		return false;
-	}
-	else	{
-		ROS_INFO("opened port %s", m_port.c_str());
-		m_ardu.setup_port(m_baud, 8, 1, true);		
-	}
-
 	//mavlink
 	sysid = -1;
 	compid = 110;	//not entirely sure why this is 110
@@ -36,6 +26,17 @@ bool au_uav_ros::ArduTalker::init(ros::NodeHandle _n)	{
 	//plane id shenanigans 
 	planeID = -1;
 	isIDSet = false;
+	
+	//Open and setup port.
+	if(m_ardu.open_port(m_port) == -1)	{
+		ROS_ERROR("Could not open port %s", m_port.c_str());
+		return false;
+	}
+	else	{
+		ROS_DEBUG("opened port %s", m_port.c_str());
+		m_ardu.setup_port(m_baud, 8, 1, true);		
+	}
+
 
 	//Set up Ros stuff. Todo - 
 	m_node = _n;
@@ -49,7 +50,7 @@ bool au_uav_ros::ArduTalker::init(ros::NodeHandle _n)	{
 }
 
 void au_uav_ros::ArduTalker::run()	{
-	ROS_INFO("Entering Run");
+	fprintf(stderr, "ArduTalker::entering run()");
 
 	//Spin up thread to execute myTelemCallback()
 	boost::thread sendCommands(boost::bind(&ArduTalker::spinThread, this));	
@@ -90,7 +91,9 @@ void au_uav_ros::ArduTalker::listen()	{
 				IDSetter.lock();
 				planeID = message.sysid;
 				isIDSet = true;
+				cond.notify_all();
 				IDSetter.unlock();
+				fprintf(stderr, "\nGOT PLANE ID!!!!!!!!!!!!!!!!!!!!!!!!!!!! %d\n", planeID);
 			}
 			//ROS_INFO("Received AU_UAV message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.
 			au_uav_ros::Telemetry tUpdate, tRawUpdate;
@@ -101,8 +104,7 @@ void au_uav_ros::ArduTalker::listen()	{
 			au_uav_ros::mav::convertMavlinkTelemetryToROS(myMSG, tUpdate);
 			tUpdate.planeID = message.sysid; 
 	  		m_telem_pub.publish(tUpdate);
-		        ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
-
+		//        ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);	
 
 			//Forward raw telemetry update to the xbee_talker node
 //			au_uav_ros::mav::rawMavlinkTelemetryToRawROSTelemetry(myMSG, tRawUpdate);
@@ -154,9 +156,13 @@ bool au_uav_ros::ArduTalker::getPlaneID(au_uav_ros::planeIDGetter::Request &req,
 
 	//You know what? Might as well stick a conditional variable. In for a penny in for a pound. DOn't push this waiting crap onto other nodes
 	//I don't know enough about boost.
+	fprintf(stderr, "ardutalker::getPlaneID() callback called!");
 	boost::unique_lock<boost::mutex> lock(IDSetter);
-	while(!isIDSet)
+	while(!isIDSet)	{	
+		fprintf(stderr, "ardutalker::getPlaneID() idNOT set.. waiting!");
 		cond.wait(lock);
+	}
+	fprintf(stderr, "ardutalker::getPlaneID() Got! %d\n", planeID);
 	res.planeID = planeID;
 	return true;	
 }
