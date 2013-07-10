@@ -22,6 +22,9 @@
 #include "au_uav_ros/Telemetry.h"
 
 
+//When is a waypoint considered "reached"?
+#define WP_REACH_DISTANCE 12
+
 namespace au_uav_ros	{
 	class Mover {
 		private:
@@ -29,7 +32,9 @@ namespace au_uav_ros	{
 			CollisionAvoidance ca;
 
 			int planeID;					//current plane id
-
+			au_uav_ros::Telemetry myTelem;			//my current telemetry
+			bool ca_wp_sent;				//has current collision waypoint (ca_wp[0]) been sent?
+				
 			//Queues for Waypoints
 			au_uav_ros::Command goal_wp;			//store goal wp from Ground control 
 			std::deque<au_uav_ros::Command> ca_wp;	 	//store collision avoidance waypoints 

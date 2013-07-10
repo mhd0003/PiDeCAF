@@ -8,6 +8,10 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 	//It's OK to have movement/publishing ca-commands here, since this will be called
 	//when ardupilot publishes *my* telemetry msgs too.
 
+	//lock
+	if(telem.planeID == planeID)
+		myTelem = telem;
+	//unlock
 
 	au_uav_ros::Command com = ca.avoid(telem);	
 
@@ -17,18 +21,14 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 	}		
 	else	{
 		//Check if collision avoidance waypoint should be queued up, or replace all previous ca waypoints.	
-		if(!com.replace)	{
-			ca_wp_lock.lock();
-			ca_wp.push_back(com);	
-			ca_wp_lock.unlock();	
-		}
-		else{
-			ca_wp_lock.lock();
-			ca_wp.clear();
-			ca_wp.push_back(com);	
-			ca_wp_lock.unlock();	
+		//no more non replace queue up
+		ca_wp_lock.lock();
+		ca_wp_sent = false;
+		ca_wp.clear();
+		ca_wp.push_back(com);	
+		ca_wp_lock.unlock();	
 		
-		}
+		
 	}
 }
 
@@ -91,30 +91,42 @@ void au_uav_ros::Mover::move()	{
 
 	//Some shutdown method.. how to??????
 	while(ros::ok()){
-		//If collision avoidance is NOT EMPTY, that takes precedence
-		bool empty_ca_q = false;
-		//attempt to limit the number of commands sent to the ardupilot,
-		//we can still process telemetry updates quickly, but we only send 4 commands
-		//a second
-		ros::Duration(0.25).sleep();
+		ros::Duration(0.25).sleep();	//don't swamp sending of commands
+		
+		bool empty_ca_q = false;	//Is the CA queue empty?
+		bool should_publish = false;	//Has the latest CA been published already?
+		
+		//Is CA_q not empty?
 		ca_wp_lock.lock();
 		empty_ca_q = ca_wp.empty();
 		if(!empty_ca_q)	{
-			com = ca_wp.front();
-			ca_wp.pop_front();	
+			if(!ca_wp_sent)	{	//It's a brand new CA wp.
+				com = ca_wp.front();
+				should_publish = true;
+				ca_wp_sent = true;
+			}
+			else	{		//It's already been published.
+				//Have I reached it? 	
+				if( myTelem.distanceToDestination <  WP_REACH_DISTANCE &&
+					myTelem.destLatitude == com.latitude &&
+					myTelem.destLongitude == com.longitude &&
+					myTelem.destAltitude == com.altitude)	{
+					ca_wp_sent = false;
+					ca_wp.pop_front();	
+				}
+			}
 		}
 		ca_wp_lock.unlock();	
-		//PROBLEM: Don't want to swamp the ardupilot with too many commands. 
-		//Check to see if current destination is any of these, if so, don't send don't send!
 
 		//If collision avoidance is empty, send goal_wp
 		if(empty_ca_q)	{
+			should_publish = true;
 			com = goal_wp;	
 		}	
 
-		//Sending out command to ardupilot if it's different from current dest
-		
-		ca_commands.publish(com);
+		if(should_publish)	{
+			ca_commands.publish(com);
+		}
 
 	}
 }
