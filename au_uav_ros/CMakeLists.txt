@@ -124,10 +124,15 @@ target_link_libraries(mover ${catkin_LIBRARIES})
 #catkin_add_gtest(collisionAvoidance  test/ca_tester.cpp)
 
 #Node Testing
-catkin_add_gtest(planeID_tester src/test/planeIDServiceTester.cpp)
-target_link_libraries(planeID_tester ${catkin_LIBRARIES})
-set_target_properties(planeID_tester PROPERTIES OUTPUT_NAME planeID_tester)
-add_rostest(test/planeIDServiceTester.test)
+catkin_add_gtest(planeIDServer_tester src/test/serverSideIDTester.cpp)
+target_link_libraries(planeIDServer_tester ${catkin_LIBRARIES})
+set_target_properties(planeIDServer_tester PROPERTIES OUTPUT_NAME planeIDServer_tester)
+add_rostest(test/planeIDServerTester.test)
+
+catkin_add_gtest(planeIDClient_tester src/test/clientSideIDTester.cpp)
+target_link_libraries(planeIDClient_tester ${catkin_LIBRARIES})
+set_target_properties(planeIDClient_tester PROPERTIES OUTPUT_NAME planeIDClient_tester)
+add_rostest(test/planeIDClientTester.test)
 
 catkin_package(
    INCLUDE_DIRS include
