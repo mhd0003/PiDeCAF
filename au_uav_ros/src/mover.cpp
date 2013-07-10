@@ -68,6 +68,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n)	{
 	
 	//CA init
 	ca.init(planeID);
+	return true;
 }
 
 void au_uav_ros::Mover::run()	{
@@ -108,9 +109,11 @@ void au_uav_ros::Mover::move()	{
 		//Check to see if current destination is any of these, if so, don't send don't send!
 
 		//If collision avoidance is empty, send goal_wp
+		/* Not needed for our algorithm
 		if(empty_ca_q)	{
 			com = goal_wp;	
 		}	
+		*/
 
 		//Sending out command to ardupilot if it's different from current dest
 		
