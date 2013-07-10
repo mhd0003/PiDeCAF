@@ -15,7 +15,7 @@ namespace au_uav_ros	{
 	private:
 		au_uav_ros::Command goal_wp;
 	public:
-		void init();	
+		void init(int planeID);	
 		/*
 		 * Called by mover's Telem callback. Takes in all telemetry callbacks (including my own).
 		 * Returns desired command, with bool replace field indicating wheter to queue up or replace with new CA waypoint.

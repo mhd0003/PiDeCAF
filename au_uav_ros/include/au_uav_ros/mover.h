@@ -40,7 +40,6 @@ namespace au_uav_ros	{
 			ros::NodeHandle nh;
 			ros::ServiceClient IDclient;	//Get my plane's ID form ardupilot node.
 			ros::Publisher ca_commands;	//Publish actual CA command waypoints
-			ros::Subscriber my_telem_sub;	//Subscribe to just me telemetry (in raw mav format)
 			ros::Subscriber all_telem;	//Subscribe to all telemetry msgs (me and other planes)
 			ros::Subscriber gcs_commands;	//Subscribe to commands from Ground control
 

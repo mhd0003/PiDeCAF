@@ -53,7 +53,6 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n)	{
 	ca_commands = nh.advertise<au_uav_ros::Command>("ca_commands", 10);	
 	all_telem = nh.subscribe("all_telemetry", 20, &Mover::all_telem_callback, this);	
 	gcs_commands = nh.subscribe("gcs_commands", 20, &Mover::gcs_command_callback, this);	
-	my_telem_sub = nh.subscribe("my_mav_telemetry", 20, &Mover::my_telem_callback, this);
 	
 
 	//Find out my Plane ID.
@@ -68,7 +67,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n)	{
 	}
 	
 	//CA init
-	ca.init();
+	ca.init(planeID);
 }
 
 void au_uav_ros::Mover::run()	{
