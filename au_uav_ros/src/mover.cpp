@@ -50,7 +50,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n)	{
 
 	IDclient = nh.serviceClient<au_uav_ros::planeIDGetter>("getPlaneID");
 	ca_commands = nh.advertise<au_uav_ros::Command>("ca_commands", 10);	
-	all_telem = nh.subscribe("all_telemetry", 20, &Mover::all_telem_callback, this);	
+	all_telem = nh.subscribe("all_telemetry", 10, &Mover::all_telem_callback, this);
 	gcs_commands = nh.subscribe("gcs_commands", 20, &Mover::gcs_command_callback, this);	
 	
 
