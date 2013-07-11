@@ -3,9 +3,7 @@
 void au_uav_ros::CollisionAvoidance::init(int planeID)	{
 
 	ROS_INFO("CollisionAvoidance:init()");
-
-	//Hardcode id for now
-	me.setID(255);
+	me.setID(planeID);
 
 }
 
