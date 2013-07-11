@@ -10,6 +10,8 @@
  * 	all_telemetry 	Calls collision avoidance (ca.avoid()) and sets next_wp.	
  *	gcs_command	Sets goal_wp to newly received goal waypoint.
  *
+ * TODOS: Lock setting goal_wp for CA.
+ * 	  MOre robust for when planeID service is not succesfull.	  
  */
 
 
@@ -17,13 +19,13 @@
 
 //callbacks
 //----------------------------------------------------
+
+/*
+ * Callback on all telemetry msgs (including my own). Sets either goal_wp or collision avoidance as next_wp.
+ */
 void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 
-	//CA will go here.
-	//It's OK to have movement/publishing ca-commands here, since this will be called
-	//when ardupilot publishes *my* telemetry msgs too.
-
-
+	//call collision avoidance on incoming telemetry.
 	au_uav_ros::Command com = ca.avoid(telem);	
 
 	//No collision avoidance waypoint, send goal_wp instead.
@@ -38,6 +40,9 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 	next_wp_lock.unlock();	
 }
 
+/*
+ * Callback on all ground control commands. Sets goal waypoint in Mover.
+ */
 void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 	//Add this to the goal_wp q.
 	goal_wp_lock.lock();
@@ -53,6 +58,9 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 //node functions
 //----------------------------------------------------
 
+/*
+ * Plane ID service in Ardupilot Node called. If unable to get planeID, will return false and Mover will be killed.
+ */
 bool au_uav_ros::Mover::init(ros::NodeHandle n)	{
 	//Ros stuff
 	nh = n;
