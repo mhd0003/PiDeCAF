@@ -33,12 +33,15 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 }
 
 void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
-	//Add this to the goal_wp q.
-	goal_wp_lock.lock();
-	goal_wp = com;	
-	goal_wp_lock.unlock();
-	ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
-	ca.setGoalWaypoint(com);
+	if(planeID == com.planeID)
+	{
+		//Add this to the goal_wp q.
+		goal_wp_lock.lock();
+		goal_wp = com;
+		goal_wp_lock.unlock();
+		ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
+		ca.setGoalWaypoint(com);
+	}
 }
 
 //node functions
