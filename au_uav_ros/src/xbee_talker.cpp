@@ -34,7 +34,7 @@ bool au_uav_ros::XbeeTalker::init(ros::NodeHandle _n)	{
 
 	//Set up Ros stuff. Todo - update this my_telemetry
 	m_node = _n;
-	m_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("all_telemetry", 10);
+	m_telem_pub = m_node.advertise<au_uav_ros::Telemetry>("all_telemetry", 5);
 	m_cmd_pub = m_node.advertise<au_uav_ros::Command>("GCS_commands", 5);
 	telem_sub = m_node.subscribe("my_mav_telemetry", 2, &XbeeTalker::myTelemCallback, this); 
 	return true;
