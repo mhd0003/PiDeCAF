@@ -33,18 +33,40 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 }
 
 void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
-	//Add this to the goal_wp q.
-	goal_wp_lock.lock();
-	goal_wp = com;	
-	goal_wp_lock.unlock();
-	ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
-	ca.setGoalWaypoint(com);
+	
+	//TESTING STUFF - Quick Emergency Protocol - START and STOP publishing to ca_commands to prevent overtaking manual mode.
+	enum state temp;
+	if(com.latitude == EMERGENCY_PROTOCOL_LAT)	{
+		if(com.longitude == EMERGENCY_START_LON)	{
+			//change state to OK
+			state_change_lock.lock();
+			current_state = ST_OK;
+			state_change_lock.unlock();
+		}
+		if(com.longitude == EMERGENCY_STOP_LON)	{
+			//change state to NOGO
+			state_change_lock.lock();
+			current_state = ST_NO_GO;
+			state_change_lock.unlock();
+		}
+	}
+	else	{
+		//just a regular old gcs command, move along now.
+		//Add this to the goal_wp q.
+		goal_wp_lock.lock();
+		goal_wp = com;	
+		goal_wp_lock.unlock();
+		ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
+		ca.setGoalWaypoint(com);
+
+	}	
+	
 }
 
 //node functions
 //----------------------------------------------------
 
-bool au_uav_ros::Mover::init(ros::NodeHandle n)	{
+bool au_uav_ros::Mover::init(ros::NodeHandle n, bool fake)	{
 	//Ros stuff
 	nh = n;
 
@@ -56,18 +78,23 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n)	{
 
 	//Find out my Plane ID.
 	//-> need timed call? or keep trying to get plane id???
-	au_uav_ros::planeIDGetter srv;
-	if(IDclient.call(srv))	{
-		ROS_INFO("mover::init Got plane ID %d", srv.response.planeID);
-		planeID = srv.response.planeID;
-	}
+	if(fake)
+		planeID = 999;
 	else	{
-		ROS_ERROR("mover::init Unsuccessful get plane ID call.");//what to do here.... keep trying?
-		return false;
+		au_uav_ros::planeIDGetter srv;
+		if(IDclient.call(srv))	{
+			ROS_INFO("mover::init Got plane ID %d", srv.response.planeID);
+			planeID = srv.response.planeID;
+		}
+		else	{
+			ROS_ERROR("mover::init Unsuccessful get plane ID call.");//what to do here.... keep trying?
+			return false;
+		}
 	}
-	
 	//CA init
 	ca.init(planeID);
+
+	current_state = ST_NO_GO;
 	return true;
 }
 
@@ -85,43 +112,54 @@ void au_uav_ros::Mover::run()	{
 	spinner.join();
 }
 
+
+
 void au_uav_ros::Mover::move()	{
 
 	ROS_INFO("Entering mover::move()");	
 	au_uav_ros::Command com;
-
-	//Some shutdown method.. how to??????
+	
 	while(ros::ok()){
-		//If collision avoidance is NOT EMPTY, that takes precedence
-		bool empty_ca_q = false;
-		//attempt to limit the number of commands sent to the ardupilot,
-		//we can still process telemetry updates quickly, but we only send 4 commands
-		//a second
-		ros::Duration(0.25).sleep();
-		ca_wp_lock.lock();
-		empty_ca_q = ca_wp.empty();
-		if(!empty_ca_q)	{
-			com = ca_wp.front();
-			ca_wp.pop_front();	
+		//state machine fun
+		//note - current state is changed in gcs_callback
+		//First, get the current state
+		enum state temp;
+		state_change_lock.lock();
+		temp = current_state;
+		state_change_lock.unlock();
+		//then do some switching
+		switch(current_state)	{
+			case(ST_NO_GO):
+				//DO NOT PUBLISH! DO NOT PUBLISH!
+				break;
+			case(ST_OK):
+				//ok publish.
+				caCommandPublish();
+				break;
 		}
-		ca_wp_lock.unlock();	
-		//PROBLEM: Don't want to swamp the ardupilot with too many commands. 
-		//Check to see if current destination is any of these, if so, don't send don't send!
-
-		//If collision avoidance is empty, send goal_wp
-		/* Not needed for our algorithm
-		if(empty_ca_q)	{
-			com = goal_wp;	
-		}	
-		*/
-
-		//Sending out command to ardupilot if it's different from current dest
-		
-		ca_commands.publish(com);
-
 	}
 }
 
+//Assumes we are in ST_OK mode.
+void au_uav_ros::Mover::caCommandPublish()	{
+	au_uav_ros::Command com;
+	//If collision avoidance is NOT EMPTY, that takes precedence
+	bool empty_ca_q = false;
+	//attempt to limit the number of commands sent to the ardupilot,
+	//we can still process telemetry updates quickly, but we only send 4 commands
+	//a second
+	ros::Duration(0.25).sleep();
+	ca_wp_lock.lock();
+	empty_ca_q = ca_wp.empty();
+	if(!empty_ca_q)	{
+		com = ca_wp.front();
+		ca_wp.pop_front();	
+	}
+	ca_wp_lock.unlock();	
+
+	ca_commands.publish(com);
+
+}
 
 void au_uav_ros::Mover::spinThread()	{
 	ROS_INFO("mover::starting spinner thread");
@@ -132,8 +170,10 @@ void au_uav_ros::Mover::spinThread()	{
 int main(int argc, char **argv)	{
 	ros::init(argc, argv, "ca_logic");
 	ros::NodeHandle n;
+	bool fake;
+	n.param("fake_id", fake, false);
 	au_uav_ros::Mover mv;
-	if(mv.init(n))
+	if(mv.init(n, fake))
 		mv.run();	
 	//spin and do move logic in separate thread
 

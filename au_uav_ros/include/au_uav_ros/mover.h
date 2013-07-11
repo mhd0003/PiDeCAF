@@ -25,6 +25,11 @@
 namespace au_uav_ros	{
 	class Mover {
 		private:
+			//Meta - State Machine fun. NOte - State is changed by gcs_command callback.
+			enum state {ST_NO_GO, ST_OK};	
+			enum state current_state; 
+			boost::mutex state_change_lock;			//Both gcs_command callback and move() need to FIGHT TO THE DEATH
+
 			//Collision Avoidance fun
 			CollisionAvoidance ca;
 
@@ -66,9 +71,12 @@ namespace au_uav_ros	{
 
 			//main decision making logic
 			void move();
+
+			//OK you can publish stuff now.
+			void caCommandPublish();
 		public:
 			int getPlaneID() {return planeID;} 
-			bool init(ros::NodeHandle n);
+			bool init(ros::NodeHandle n, bool fake);
 			void run();
 
 	};
