@@ -1,6 +1,19 @@
-
 #ifndef MOVER_H 
 #define MOVER_H 
+
+/*
+ * Mover node
+ * Team 1 2013 REU
+ *
+ * Responsible for running collision avoidance and generating delicious new commands for the ardupilot.
+ *
+ * Subscribes to:
+ * 	gcs_commands - Goal waypoint commands from ground control station.
+ * 	all_telemetry - All telemetry messages from other planes and myself.
+ *
+ * Publishes to:
+ * 	ca_commands - New collision avoidance waypoint commands for Ardupilot.
+ */
 
 
 #include <queue>
@@ -11,32 +24,30 @@
 #include "au_uav_ros/collision_avoidance.h"
 #include "au_uav_ros/planeObject.h"
 
-#include "au_uav_ros/planeIDGetter.h"
-
 #include "au_uav_ros/pi_standard_defs.h"
 #include "au_uav_ros/Fsquared.h"
 
 //ros stuff
 #include "ros/ros.h"
-#include "au_uav_ros/Command.h"
+#include "au_uav_ros/Command.h"		
 #include "au_uav_ros/Telemetry.h"
+#include "au_uav_ros/planeIDGetter.h"	//Srv header that returns plane ID.
 
 
 namespace au_uav_ros	{
 	class Mover {
 		private:
-			//Collision Avoidance fun
-			CollisionAvoidance ca;
+			CollisionAvoidance ca;				//Main Collision Avoidance logic here.
 
 			int planeID;					//current plane id
 
 			//Queues for Waypoints
 			au_uav_ros::Command goal_wp;			//store goal wp from Ground control 
-			std::deque<au_uav_ros::Command> ca_wp;	 	//store collision avoidance waypoints 
+			std::deque<au_uav_ros::Command> next_wp;	//store waypoint to go to next, produced by collision avoidance 
 
 			//Locks for Queues
 			boost::mutex goal_wp_lock;
-			boost::mutex ca_wp_lock;
+			boost::mutex next_wp_lock;
 
 			//ROS stuff
 			ros::NodeHandle nh;

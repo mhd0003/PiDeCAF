@@ -1,4 +1,18 @@
-//mover.cpp
+/*
+ * Mover node
+ * 
+ * main()
+ * 	init() -initializes ROS items and collision avoidance obj, obtains planeID from Ardupilot. 
+ *	run() - Spins up new thread to ros::spin() for callbacks.
+ *		Calls move() - Publishes next_wp at 4 hz.    
+ * 		 
+ * callbacks
+ * 	all_telemetry 	Calls collision avoidance (ca.avoid()) and sets next_wp.	
+ *	gcs_command	Sets goal_wp to newly received goal waypoint.
+ *
+ */
+
+
 #include "au_uav_ros/mover.h"
 
 //callbacks
@@ -12,25 +26,16 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 
 	au_uav_ros::Command com = ca.avoid(telem);	
 
-	//Check if ca_waypoint should be ignored
+	//No collision avoidance waypoint, send goal_wp instead.
 	if(com.latitude == INVALID_GPS_COOR && com.longitude == INVALID_GPS_COOR && com.altitude == INVALID_GPS_COOR)	{
-		//ignore.
+		goal_wp_lock.lock();
+		com = goal_wp;
+		goal_wp_lock.lock();
 	}		
-	else	{
-		//Check if collision avoidance waypoint should be queued up, or replace all previous ca waypoints.	
-		if(!com.replace)	{
-			ca_wp_lock.lock();
-			ca_wp.push_back(com);	
-			ca_wp_lock.unlock();	
-		}
-		else{
-			ca_wp_lock.lock();
-			ca_wp.clear();
-			ca_wp.push_back(com);	
-			ca_wp_lock.unlock();	
-		
-		}
-	}
+	next_wp_lock.lock();
+	next_wp.clear();
+	next_wp.push_back(com);	
+	next_wp_lock.unlock();	
 }
 
 void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
@@ -39,6 +44,9 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 	goal_wp = com;	
 	goal_wp_lock.unlock();
 	ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
+	
+	//may need to lock this... noooooooonoooooooooo
+	////TODO TODO TODO TODO
 	ca.setGoalWaypoint(com);
 }
 
@@ -93,30 +101,18 @@ void au_uav_ros::Mover::move()	{
 
 	//Some shutdown method.. how to??????
 	while(ros::ok()){
-		//If collision avoidance is NOT EMPTY, that takes precedence
-		bool empty_ca_q = false;
 		//attempt to limit the number of commands sent to the ardupilot,
 		//we can still process telemetry updates quickly, but we only send 4 commands
 		//a second
 		ros::Duration(0.25).sleep();
-		ca_wp_lock.lock();
-		empty_ca_q = ca_wp.empty();
+		next_wp_lock.lock();
 		if(!empty_ca_q)	{
-			com = ca_wp.front();
-			ca_wp.pop_front();	
+			com = next_wp.front();
+			next_wp.pop_front();	
 		}
-		ca_wp_lock.unlock();	
+		next_wp_lock.unlock();	
 		//PROBLEM: Don't want to swamp the ardupilot with too many commands. 
 		//Check to see if current destination is any of these, if so, don't send don't send!
-
-		//If collision avoidance is empty, send goal_wp
-		/* Not needed for our algorithm
-		if(empty_ca_q)	{
-			com = goal_wp;	
-		}	
-		*/
-
-		//Sending out command to ardupilot if it's different from current dest
 		
 		ca_commands.publish(com);
 
