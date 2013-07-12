@@ -8,7 +8,6 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 	//It's OK to have movement/publishing ca-commands here, since this will be called
 	//when ardupilot publishes *my* telemetry msgs too.
 
-
 	au_uav_ros::Command com = ca.avoid(telem);	
 
 	//Check if ca_waypoint should be ignored
@@ -69,7 +68,7 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 //node functions
 //----------------------------------------------------
 
-bool au_uav_ros::Mover::init(ros::NodeHandle n, bool fake)	{
+bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
 	//Ros stuff
 	nh = n;
 
@@ -81,7 +80,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n, bool fake)	{
 
 	//Find out my Plane ID.
 	//-> need timed call? or keep trying to get plane id???
-	if(fake)
+	if(!real_id)
 		planeID = 999;
 	else	{
 		au_uav_ros::planeIDGetter srv;
@@ -181,9 +180,9 @@ int main(int argc, char **argv)	{
 	ros::init(argc, argv, "ca_logic");
 	ros::NodeHandle n;
 	//n.param("fake_id", fake , false); //not very successfull. set aside for later.
-	bool fake = true;	
+	bool use_real_id = true;	
 	au_uav_ros::Mover mv;
-	if(mv.init(n, fake))
+	if(mv.init(n, use_real_id))
 		mv.run();	
 	//spin and do move logic in separate thread
 
