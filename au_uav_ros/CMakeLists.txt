@@ -39,22 +39,30 @@ generate_messages(DEPENDENCIES
   std_msgs
 )
 
-#add_library(standardFuncs src/standardFuncs.cpp include/au_uav_ros/standardFuncs.h)
-#add_library(standardDefs src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
+add_library(standardFuncs src/standardFuncs.cpp include/au_uav_ros/standardFuncs.h)
+add_library(standardDefs src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
 #add_library(planeBuilder src/planeBuilder.cpp include/au_uav_ros/planeBuilder.h src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
 #add_library(planeBuilder src/planeBuilder.cpp include/au_uav_ros/planeBuilder.h)
-add_library(planeObject src/planeObject.cpp  src/standardFuncs.cpp  src/standardDefs.cpp )
-#add_library(planeObject src/planeObject.cpp include/au_uav_ros/planeObject.h)
+#add_library(planeObject src/planeObject.cpp  src/standardFuncs.cpp  src/standardDefs.cpp )
+add_library(planeObject src/planeObject.cpp include/au_uav_ros/planeObject.h)
 #add_library(simPlaneObject src/simPlaneObject.cpp include/au_uav_ros/simPlaneObject.h)
-#add_library(vmath src/vmath.cpp include/au_uav_ros/vmath.h)
+add_library(vmath src/vmath.cpp include/au_uav_ros/vmath.h)
 #add_library(ripna src/ripna.cpp include/au_uav_ros/ripna.h)
 #add_library(collisionAvoidance src/collisionAvoidance.cpp include/au_uav_ros/collisionAvoidance.h)
-add_library(serial_talker src/serial_talker.cpp)
-add_library(mavlink_fun src/mavlink_read.cpp)
-add_library(collision_avoidance src/collision_avoidance.cpp)
+add_library(serial_talker include/au_uav_ros/serial_talker.h src/serial_talker.cpp)
+add_library(mavlink_fun include/au_uav_ros/mavlink_read.h src/mavlink_read.cpp)
+add_library(collision_avoidance include/au_uav_ros/collision_avoidance.h src/collision_avoidance.cpp)
 
-add_library(fsquared src/planeObject.cpp src/Fsquared.cpp src/vmath.cpp src/ForceField.cpp)
-add_library(ipn src/plane.cpp src/vector2D.cpp src/ipn.cpp)
+#add_library(fsquared src/planeObject.cpp src/Fsquared.cpp src/vmath.cpp src/ForceField.cpp)
+#add_library(ipn src/plane.cpp src/vector2D.cpp src/ipn.cpp)
+add_library(fsquared include/au_uav_ros/Fsquared.h src/Fsquared.cpp)
+add_library(forceField include/au_uav_ros/ForceField.h src/ForceField.cpp)
+
+add_library(vector2D include/au_uav_ros/vector2D.h src/vector2D.cpp)
+add_library(plane include/au_uav_ros/plane.h src/plane.cpp)
+add_library(ipn include/au_uav_ros/ipn.h src/ipn.cpp)
+
+
 
 #add_executable(xbee src/test.cpp)
 
@@ -119,12 +127,19 @@ target_link_libraries(mover ${catkin_LIBRARIES})
 #target_link_libraries(ripna vmath)
 #target_link_libraries(standardDefs ${BOOST_LIBRARIES})
 #target_link_libraries(planeBuilder standardDefs)
-#target_link_libraries(planeObject standardFuncs standardDefs)
+target_link_libraries(planeObject standardFuncs standardDefs)
 #target_link_libraries(collisionAvoidance ripna)
 #target_link_libraries(simPlaneObject planeObject)
 #target_link_libraries(simulator ${catkin_LIBRARIES} simPlaneObject)
 #target_link_libraries(guiInterfacer ${catkin_LIBRARIES})
 #target_link_libraries(coordinator ${catkin_LIBRARIES} planeBuilder simPlaneObject planeObject collisionAvoidance vmath)
+target_link_libraries(fsquared planeObject vmath forceField)
+target_link_libraries(ipn vector2D)
+target_link_libraries(collision_avoidance plane)
+
+#add_library(fsquared src/planeObject.cpp src/Fsquared.cpp src/vmath.cpp src/ForceField.cpp)
+#add_library(ipn src/plane.cpp src/vector2D.cpp src/ipn.cpp)
+
 
 #Unit testing (empty for now)
 #catkin_add_gtest(collisionAvoidance  test/ca_tester.cpp)

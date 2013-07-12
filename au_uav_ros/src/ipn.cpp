@@ -47,22 +47,26 @@ bool ipn::checkForThreats(Plane &thisPlane, std::map<int, Plane> &planeMap, wayp
 	/* (1) Get threat info for all planes */
 	std::map<int, Plane>::iterator it;
 	for (it = planeMap.begin(); it != planeMap.end(); it++) {
+		if (thisPlane.getID() == it->first) {
+			ROS_INFO("$!$!$!$ Plane in my map with same ID! $!$!$!$!$!");
+			continue;
+		}
+
 		allThreats.push_back(getThreatInfo(thisPlane, it->second));
 		//allThreats[it->first] = getThreatInfo(thisPlane, it->second);
 	}
 
 	/* (2) Determine greatest threat */
 	threatInfo* greatestThreat = findGreatestThreat(allThreats);
+
 	if (greatestThreat == NULL) {
 		return false;
-	} else {
-		/* (3) Generate avoidance waypoint */
-		avoidanceWP = createAvoidanceWaypoint(thisPlane, *greatestThreat);
-
-		return true;
 	}
-	
-	return false;
+
+	/* (3) Generate avoidance waypoint */
+	avoidanceWP = createAvoidanceWaypoint(thisPlane, *greatestThreat);
+
+	return true;
 }
 
 /* Return a container with info used to determine threat danger */
@@ -73,7 +77,7 @@ ipn::threatInfo ipn::getThreatInfo(Plane &thisPlane, Plane &otherPlane) {
 	Vector2D direction = getDirectionVector(thisPlane, otherPlane);
 
 	if (separation.getX() == 0 && separation.getY() == 0) {
-		ROS_ERROR("Planes at same position?");
+		ROS_INFO("Planes at same position?");
 	}
 	separationDistance = separation.getMagnitude();
 	
@@ -98,8 +102,8 @@ ipn::threatInfo ipn::getThreatInfo(Plane &thisPlane, Plane &otherPlane) {
 
 	threatInfo threat;
 	threat.threatPlane = &otherPlane;
-	threat.separationV = separation;
-	threat.directionV = direction;
+	threat.separation = separation;
+	threat.direction = direction;
 	threat.separationDistance = separationDistance;
 	threat.t_go = t_go;
 	threat.ZEM = ZEM;
@@ -123,7 +127,7 @@ ipn::threatInfo* ipn::findGreatestThreat(std::vector<threatInfo> &allThreats) {
 			continue;
 		}
 
-		if (fabs( allThreats[i].separationV.getAngle() ) > 67.5) {
+		if (fabs( allThreats[i].separation.getAngle() ) > 67.5) {
 			continue;
 		}
 
@@ -146,7 +150,7 @@ bool ipn::shouldTurnRight(Plane &thisPlane, threatInfo &threat) {
 	double thisPlaneBearing = thisPlane.getCurrentBearing();
 	double threatPlaneBearing = threat.threatPlane->getCurrentBearing();
 
-	double LOS_angle = threat.separationV.getAngle();
+	double LOS_angle = threat.separation.getAngle();
 	double theta_1 = LOS_angle - thisPlaneBearing;
 	double theta_2 = LOS_angle - threatPlaneBearing;
 
@@ -168,15 +172,14 @@ waypoint ipn::createAvoidanceWaypoint(Plane &thisPlane, threatInfo &threat) {
 	waypoint currentLoc = thisPlane.getCurrentLocation();
 	double currentBearing = thisPlane.getCurrentBearing() * DEGREES_TO_RADIANS;
 	double newBearing;
-	//double maxTurnAngle = thisPlane.getSimSpeed() * MAXIMUM_TURNING_ANGLE;
 	double turnAngle = MAXIMUM_TURNING_ANGLE * exp(-1.0 * threat.ZEM / ZEM_THRESHOLD);
 	if (shouldTurnRight(thisPlane, threat)) {
 		turnAngle = -1.0 * turnAngle;
 	}
 	newBearing = currentBearing + turnAngle * DEGREES_TO_RADIANS;
 
-	wp.latitude = currentLoc.latitude + thisPlane.getGroundSpeed() * sin(newBearing) / threat.separationV.getLatToMeters();
-	wp.longitude = currentLoc.longitude + thisPlane.getGroundSpeed() * cos(newBearing) / threat.separationV.getLonToMeters();
+	wp.latitude = currentLoc.latitude + thisPlane.getGroundSpeed() * sin(newBearing) / threat.separation.getLatToMeters();
+	wp.longitude = currentLoc.longitude + thisPlane.getGroundSpeed() * cos(newBearing) / threat.separation.getLonToMeters();
 	wp.altitude = currentLoc.altitude;
 
 	return wp;

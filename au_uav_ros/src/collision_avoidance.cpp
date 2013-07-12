@@ -56,7 +56,7 @@ au_uav_ros::Command au_uav_ros::CollisionAvoidance::runIPN(au_uav_ros::Telemetry
 	goalWaypoint.altitude = goal_wp.altitude;
 	goal_wp_lock.unlock();
 
-	ROS_ERROR("My planeID: %d. telem planeID: %d", thisPlane.getID(), telem.planeID);
+	ROS_INFO("My planeID: %d. telem planeID: %d", thisPlane.getID(), telem.planeID);
 
 	command.planeID = thisPlane.getID();
 	command.commandID = 2;
@@ -73,7 +73,8 @@ au_uav_ros::Command au_uav_ros::CollisionAvoidance::runIPN(au_uav_ros::Telemetry
 		au_uav_ros::waypoint avoidanceWaypoint;
 		std::map<int, ipn::Plane> planeMap = thisPlane.getPlaneMap();
 
-		ROS_ERROR("Ooh! About to check for threats. thisPlane's map has %d planes", planeMap.size());
+		int mapSize = planeMap.size();
+		ROS_INFO("Ooh! About to check for threats. thisPlane's map has %d planes", mapSize);
 
 		if (ipn::checkForThreats(thisPlane, planeMap, avoidanceWaypoint)) {
 			command.latitude = avoidanceWaypoint.latitude;
@@ -85,7 +86,7 @@ au_uav_ros::Command au_uav_ros::CollisionAvoidance::runIPN(au_uav_ros::Telemetry
 			command.altitude = goalWaypoint.altitude;
 		}
 	}
-	ROS_ERROR("%f, %f, %f", command.latitude, command.longitude, command.altitude);
+	ROS_INFO("Returning command: (%f, %f, %f)", command.latitude, command.longitude, command.altitude);
 	return command;
 }
 
@@ -95,5 +96,4 @@ void au_uav_ros::CollisionAvoidance::setGoalWaypoint(au_uav_ros::Command com)	{
 	goal_wp_lock.lock();
 	goal_wp = com;
 	goal_wp_lock.unlock();
-	goal_wp = com;
 }

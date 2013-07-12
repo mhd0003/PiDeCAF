@@ -15,7 +15,7 @@ namespace ipn {
 
 	struct threatInfo {
 		Plane *threatPlane;
-		Vector2D separationV, directionV;
+		Vector2D separation, direction;
 		double separationDistance, t_go, ZEM;
 	};
 
