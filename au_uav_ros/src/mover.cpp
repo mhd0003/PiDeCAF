@@ -107,6 +107,8 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
 			goal_wp.latitude = initialLat = srv.response.initialLatitude;
 			goal_wp.longitude= initialLong = srv.response.initialLongitude;
 			goal_wp.latitude = initialAlt = srv.response.initialLatitude;
+			goal_wp.param = 2;
+			goal_wp.commandID = 2;
 		}
 		else	{
 			ROS_ERROR("mover::init Unsuccessful get plane ID call.");//what to do here.... keep trying?
