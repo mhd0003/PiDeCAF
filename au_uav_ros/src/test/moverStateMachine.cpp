@@ -1,48 +1,116 @@
+//AT LEAST a 1.2 second delay when it stops sending commands
+
+
 #include <iostream>
 #include <gtest/gtest.h>
 #include <ros/ros.h>
-#include <au_uav_ros/planeIDGetter.h>
+#include <au_uav_ros/pi_standard_defs.h>
+#include <roscpp/Logger.h>
+#include <au_uav_ros/Command.h>
+
+#include <boost/thread.hpp>
 
 //Really can't think of how to handle the plane ID delimma. Just don't get the planeID.. comment that bit out
+class test_id_srv {
+	public:
+	test_id_srv()	{
+		sinceLastCACommand = ros::Time::now();
+		lag.sec = 1;
 
-namespace {
-class test_id_srv : public :: testing::Test	{
-	protected:
-	
-	bool get(au_uav_ros::planeIDGetter::Request &req,
-			au_uav_ros::planeIDGetter::Response &res)	{
-			res.planeID = 9999;	
+		stop.latitude = EMERGENCY_PROTOCOL_LAT;
+		stop.longitude = EMERGENCY_STOP_LON;
+
+		go.latitude = EMERGENCY_PROTOCOL_LAT;
+		go.longitude = EMERGENCY_START_LON;
+
+		regCom.latitude = 123;
+		regCom.longitude = 123;
 	}
 
-	virtual void SetUp()	{
-		server = n.advertiseService("getPlaneID", &test_id_srv::get, this);		
-			
+
+	void ca_command_callback(au_uav_ros::Command com)	{
+		fprintf(stderr, "tester::GOT CA COMMAND CALLBACK!\n");	
+		sinceLastCACommand = ros::Time::now();	
 	}
 
-	virtual void TearDown()	{
-		ros::shutdown();
+	bool ca_commands_chatty()	{
+		return ros::Time::now() - sinceLastCACommand < lag; 
 	}
 
+	bool ca_commands_silent()	{
+		return ros::Time::now() - sinceLastCACommand > lag; 
+	}
 	//stuff
-	ros::NodeHandle n;
-	ros::ServiceServer server;
+	ros::Time sinceLastCACommand;	
+	ros::Duration lag;	//one second lag OK from sending command to reponse
 
+	au_uav_ros::Command stop;
+	au_uav_ros::Command go;
+	au_uav_ros::Command regCom;
 };
 
+void spinThread()	{
+	fprintf(stderr, "spinning...");
+	ros::spin();
+}
+
+
+
+TEST(mover, state_runthrough)	{
+
+	double sleep_time = 1.3;
+	boost::thread spinner(spinThread);
+
+	test_id_srv t;
+	ros::NodeHandle n;
+	ros::Publisher gcs = n.advertise<au_uav_ros::Command>("gcs_commands", 5);	
+	
+	ros::Subscriber ca = n.subscribe("ca_commands", 1, &test_id_srv::ca_command_callback, &t);	
+	
+	ros::Publisher fake = n.advertise<au_uav_ros::Command>("ca_commands", 5);	
+	fake.publish(t.regCom);
+	fprintf(stderr, "test::FAKE PUBLISH");
+	ros::Duration(5).sleep();	//time enough to measure lag initially
+
+	//NO GO MODE
+	//-------------
+	//Mover should be starting in NOGO mode.
+	fprintf(stderr, "TEST::Expect start in NOGO\n");
+	EXPECT_TRUE(t.ca_commands_silent());	//No commands should have been sent within the last lag period.
+
+
+	gcs.publish(t.stop); //publish stop...
+	EXPECT_TRUE(t.ca_commands_silent());	
+
+	gcs.publish(t.regCom);	//publish regular command
+	EXPECT_TRUE(t.ca_commands_silent());	
+
+	gcs.publish(t.go); //transition
+	
+	ros::Duration(sleep_time).sleep();	//time enough to measure lag initially
+	
+	EXPECT_TRUE(t.ca_commands_chatty());	
+
+	fprintf(stderr, "TEST::Expect next stage is OK\n");
+	//OK MODE
+	//-----------	
+	//IN OK mode... testing all inputs
+	gcs.publish(t.go);
+	EXPECT_TRUE(t.ca_commands_chatty()); 
+
+	gcs.publish(t.regCom);
+	EXPECT_TRUE(t.ca_commands_chatty());	
+
+	gcs.publish(t.stop); //publish stop... transition back
+	
+	ros::Duration(sleep_time).sleep();	//time enough to measure lag initially
+	EXPECT_TRUE(t.ca_commands_silent());	
+
+	ros::shutdown();
+	spinner.join();
 
 }
 
-/*
-TEST_F(test_id_srv, returnPlaneID)	{
-
-	//wow this is confusing.
-	//So, if the ardupilot port can't even be opened, the id will be returned as 0??? what's happening?
-	ros::Duration(30).sleep(); 
-//	EXPECT_TRUE(
-	fprintf(stderr, "planeIDTESTER::Plane ID is %d", srv.response.planeID);
-
-}
-*/
 
 
 int main(int argc, char ** argv)	{
