@@ -11,13 +11,16 @@
 
 #include "au_uav_ros/pi_standard_defs.h"
 #include "au_uav_ros/planeObject.h"
+#include "au_uav_ros/plane.h"
 #include "au_uav_ros/Fsquared.h"
+#include "au_uav_ros/ipn.h"
 
 namespace au_uav_ros	{
 	class CollisionAvoidance	{
 	private:
 		au_uav_ros::PlaneObject me;  	//planeObject representation of the plane running this algorithm
 		au_uav_ros::Command goal_wp;
+		ipn::Plane thisPlane;
 
 		boost::mutex goal_wp_lock;	//coordinate access to goal_wp 
 	public:
@@ -28,7 +31,7 @@ namespace au_uav_ros	{
 		 * If Command's lat, long, and alt fields are INVALID_GPS_COOR, it will be ignored.
 		 */
 		au_uav_ros::Command avoid(au_uav_ros::Telemetry telem);	//Called when there's a telemetry callback.
-
+		au_uav_ros::Command runIPN(au_uav_ros::Telemetry telem);
 		/*
 		 * When mover receives a new GCS command, this function will be called.
 		 * Updates CA's goal waypoint to match mover's

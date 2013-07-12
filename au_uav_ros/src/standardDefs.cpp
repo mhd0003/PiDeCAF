@@ -74,3 +74,7 @@ double distanceBetween(struct au_uav_ros::waypoint first, struct au_uav_ros::way
 bool operator==(const struct au_uav_ros::waypoint &wp1, const struct au_uav_ros::waypoint &wp2) {
 	return ((wp1.altitude == wp2.altitude) && (wp1.longitude == wp2.longitude) && (wp1.latitude == wp2.latitude));
 }
+
+bool operator!=(const struct au_uav_ros::waypoint &wp1, const struct au_uav_ros::waypoint &wp2) {
+	return ( (wp1.longitude != wp2.longitude) || (wp1.latitude != wp2.latitude) || (wp1.altitude != wp2.altitude) );
+}

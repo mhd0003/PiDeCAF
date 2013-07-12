@@ -47,6 +47,14 @@ namespace au_uav_ros
 		double longitude;
 		double altitude;
 		int planeID;
+
+		// TODO: Fix this hardcoded value
+		waypoint(void) {
+			latitude = -10000;
+			longitude = -10000;
+			altitude = -10000;
+			planeID = -1;
+		}
 	};
 
 	//boost::mutex serialPort;
@@ -71,5 +79,10 @@ the earth's curvature.
 */
 double distanceBetween(struct au_uav_ros::waypoint first, struct au_uav_ros::waypoint second);
 
+/*
+Equality/Inequality operators
+*/
 bool operator==(const struct au_uav_ros::waypoint &wp1, const struct au_uav_ros::waypoint &wp2);
+bool operator!=(const struct au_uav_ros::waypoint &wp1, const struct au_uav_ros::waypoint &wp2);
+
 #endif

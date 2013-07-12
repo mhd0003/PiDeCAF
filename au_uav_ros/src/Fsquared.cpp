@@ -158,7 +158,7 @@ au_uav_ros::waypoint fsquared::findTempForceWaypoint(au_uav_ros::PlaneObject &me
 	//ROS_INFO("Plane %d has attractiveForce of magnitude %f and direction %f", me.getID(),attractiveForce.getMagnitude(), attractiveForce.getDirection());
 	//ROS_INFO("Plane %d has repulsiveForce of magnitude %f and direction %f", me.getID(), repulsiveForce.getMagnitude(), repulsiveForce.getDirection());
 	//ROS_INFO("Plane %d has resultantForce of magnitude %f and direction %f", me.getID(), resultantForce.getMagnitude(), resultantForce.getDirection());
-	au_uav_ros::coordinate meCurrentCoordinates = me.getCurrentLoc();	//latitude and longitude defining where me is now
+	au_uav_ros::waypoint meCurrentCoordinates = me.getCurrentLoc();	//latitude and longitude defining where me is now
 	au_uav_ros::waypoint meCurrentWaypoint;			//holds same information as meCurrentCoordinates, but will
 													//be formatted as a waypoint with altitude 0
 

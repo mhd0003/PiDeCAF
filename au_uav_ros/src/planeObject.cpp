@@ -249,11 +249,11 @@ int PlaneObject::getID(void) const {
 	return this->id;
 }
 
-coordinate PlaneObject::getPreviousLoc(void) const {
+waypoint PlaneObject::getPreviousLoc(void) const {
 	return this->previousLoc;
 }
 
-coordinate PlaneObject::getCurrentLoc(void) const {
+waypoint PlaneObject::getCurrentLoc(void) const {
 	return this->currentLoc;
 }
 

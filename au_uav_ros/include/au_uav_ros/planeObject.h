@@ -43,8 +43,8 @@ namespace au_uav_ros {
 
             /* Accessor functions */
             int getID(void) const;
-            au_uav_ros::coordinate getPreviousLoc(void) const;
-            au_uav_ros::coordinate getCurrentLoc(void) const;
+            au_uav_ros::waypoint getPreviousLoc(void) const;
+            au_uav_ros::waypoint getCurrentLoc(void) const;
             double getTargetBearing(void) const;
             double getCurrentBearing(void) const;
             double getSpeed(void) const;
@@ -117,8 +117,8 @@ namespace au_uav_ros {
             double currentBearing;		/* get current bearing in the air, north is zero and goes to 359 in cw direction */
             double speed;
             double lastUpdateTime;
-            au_uav_ros::coordinate previousLoc;	/*used to calculate currentBearing*/
-            au_uav_ros::coordinate currentLoc;
+            au_uav_ros::waypoint previousLoc;	/*used to calculate currentBearing*/
+            au_uav_ros::waypoint currentLoc;
             au_uav_ros::waypoint destination;
             au_uav_ros::waypoint tempForceWaypoint; //temporary destination waypoint that is generated from
             										//the fsquared algorithm

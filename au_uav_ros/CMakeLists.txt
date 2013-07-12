@@ -54,7 +54,7 @@ add_library(mavlink_fun src/mavlink_read.cpp)
 add_library(collision_avoidance src/collision_avoidance.cpp)
 
 add_library(fsquared src/planeObject.cpp src/Fsquared.cpp src/vmath.cpp src/ForceField.cpp)
-
+add_library(ipn src/plane.cpp src/vector2D.cpp src/ipn.cpp)
 
 #add_executable(xbee src/test.cpp)
 
@@ -76,7 +76,7 @@ target_link_libraries(gcs serial_talker mavlink_fun)
 #mover
 add_executable(mover src/mover.cpp)
 add_dependencies(mover ${PROJECT_NAME}_gencpp)
-target_link_libraries(mover planeObject collision_avoidance fsquared)
+target_link_libraries(mover planeObject collision_avoidance fsquared ipn)
 
 
 #collision avoidance logic
