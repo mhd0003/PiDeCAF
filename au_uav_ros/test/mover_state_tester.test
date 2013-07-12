@@ -1,0 +1,6 @@
+<launch>
+	<node name="mover" pkg="au_uav_ros" type="mover" >
+	</node>
+	<test test-name="mover_state" pkg="au_uav_ros" type = "mover_state_tester" />
+
+</launch>
