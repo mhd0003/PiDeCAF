@@ -120,7 +120,8 @@ void au_uav_ros::Mover::move()	{
 
 	ROS_INFO("Entering mover::move()");	
 	au_uav_ros::Command com;
-	
+
+	//Some shutdown method.. how to??????
 	while(ros::ok())	{
 		//state machine fun
 		//note - current state is changed in gcs_callback
@@ -152,7 +153,7 @@ void au_uav_ros::Mover::caCommandPublish()	{
 	//we can still process telemetry updates quickly, but we only send 4 commands
 	//a second
 	ros::Duration(0.25).sleep();
-/*
+
 	ca_wp_lock.lock();
 	empty_ca_q = ca_wp.empty();
 	if(!empty_ca_q)	{
@@ -160,14 +161,14 @@ void au_uav_ros::Mover::caCommandPublish()	{
 		ca_wp.pop_front();	
 	}
 	ca_wp_lock.unlock();	
-*/
+/*
 	//Just send out goal wp, no collision avoidance.
 	goal_wp_lock.lock();
 	com = goal_wp;
 	goal_wp_lock.unlock();
+*/
+
 	ca_commands.publish(com);
-
-
 }
 
 void au_uav_ros::Mover::spinThread()	{
