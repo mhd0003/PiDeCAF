@@ -213,7 +213,7 @@ int main(int argc, char **argv)	{
 	bool use_real_id = true;	
 	au_uav_ros::Mover mv;
 //	if(mv.init(n, use_real_id))
-	if(mv.init(n, false))	//channnge if doing real planes to true
+	if(mv.init(n, true))	//channnge if doing real planes to true
 		mv.run();	
 	//spin and do move logic in separate thread
 
