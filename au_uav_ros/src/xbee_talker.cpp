@@ -121,7 +121,7 @@ void au_uav_ros::XbeeTalker::listen()	{
 			au_uav_ros::mav::convertMavlinkCommandToROS(receivedCommand, cmdToForward);
 			cmdToForward.planeID = message.sysid;
 			m_cmd_pub.publish(cmdToForward);
-			ROS_ERROR("Received and forwarded command with ID: %d lat: %f|lng %f|alt%f",cmdToForward.planeID,
+			ROS_ERROR("xbee: Received and forwarded command with ID: %d lat: %f|lng %f|alt%f",cmdToForward.planeID,
 					 cmdToForward.latitude, cmdToForward.longitude, cmdToForward.altitude);
 		}
         }
