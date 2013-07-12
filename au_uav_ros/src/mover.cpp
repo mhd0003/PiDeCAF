@@ -33,36 +33,38 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 }
 
 void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
+<<<<<<< HEAD
 	
 	//TESTING STUFF - Quick Emergency Protocol - START and STOP publishing to ca_commands to prevent overtaking manual mode.
-	enum state temp;
-	if(com.latitude == EMERGENCY_PROTOCOL_LAT)	{
-		if(com.longitude == EMERGENCY_START_LON)	{
-			fprintf(stderr, "CHANGING TO START MODE\n");
-			//change state to OK
-			state_change_lock.lock();
-			current_state = ST_OK;
-			state_change_lock.unlock();
+	if(planeID == com.planeID)	{
+		enum state temp;
+		if(com.latitude == EMERGENCY_PROTOCOL_LAT)	{
+			if(com.longitude == EMERGENCY_START_LON)	{
+				fprintf(stderr, "CHANGING TO START MODE\n");
+				//change state to OK
+				state_change_lock.lock();
+				current_state = ST_OK;
+				state_change_lock.unlock();
+			}
+			if(com.longitude == EMERGENCY_STOP_LON)	{
+				fprintf(stderr, "CHANGING TO NOGO MODE\n");
+				//change state to NOGO
+				state_change_lock.lock();
+				current_state = ST_NO_GO;
+				state_change_lock.unlock();
+			}
 		}
-		if(com.longitude == EMERGENCY_STOP_LON)	{
-			fprintf(stderr, "CHANGING TO NOGO MODE\n");
-			//change state to NOGO
-			state_change_lock.lock();
-			current_state = ST_NO_GO;
-			state_change_lock.unlock();
-		}
-	}
-	else	{
-		//just a regular old gcs command, move along now.
-		//Add this to the goal_wp q.
-		goal_wp_lock.lock();
-		goal_wp = com;	
-		goal_wp_lock.unlock();
-		ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
-		ca.setGoalWaypoint(com);
+		else	{
+			//just a regular old gcs command, move along now.
+			//Add this to the goal_wp q.
+			goal_wp_lock.lock();
+			goal_wp = com;	
+			goal_wp_lock.unlock();
+			ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
+			ca.setGoalWaypoint(com);
 
-	}	
-	
+		}	
+	}
 }
 
 //node functions
@@ -74,7 +76,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n, bool fake)	{
 
 	IDclient = nh.serviceClient<au_uav_ros::planeIDGetter>("getPlaneID");
 	ca_commands = nh.advertise<au_uav_ros::Command>("ca_commands", 10);	
-	all_telem = nh.subscribe("all_telemetry", 20, &Mover::all_telem_callback, this);	
+	all_telem = nh.subscribe("all_telemetry", 10, &Mover::all_telem_callback, this);
 	gcs_commands = nh.subscribe("gcs_commands", 20, &Mover::gcs_command_callback, this);	
 	
 
@@ -121,7 +123,7 @@ void au_uav_ros::Mover::move()	{
 	ROS_INFO("Entering mover::move()");	
 	au_uav_ros::Command com;
 	
-	while(ros::ok()){
+	while(ros::ok())	{
 		//state machine fun
 		//note - current state is changed in gcs_callback
 		//First, get the current state
@@ -152,6 +154,7 @@ void au_uav_ros::Mover::caCommandPublish()	{
 	//we can still process telemetry updates quickly, but we only send 4 commands
 	//a second
 	ros::Duration(0.25).sleep();
+/*
 	ca_wp_lock.lock();
 	empty_ca_q = ca_wp.empty();
 	if(!empty_ca_q)	{
@@ -159,8 +162,13 @@ void au_uav_ros::Mover::caCommandPublish()	{
 		ca_wp.pop_front();	
 	}
 	ca_wp_lock.unlock();	
-
+*/
+	//Just send out goal wp, no collision avoidance.
+	goal_wp_lock.lock();
+	com = goal_wp;
+	goal_wp_lock.unlock();
 	ca_commands.publish(com);
+
 
 }
 
