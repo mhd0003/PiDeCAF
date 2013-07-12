@@ -33,7 +33,6 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 }
 
 void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
-<<<<<<< HEAD
 	
 	//TESTING STUFF - Quick Emergency Protocol - START and STOP publishing to ca_commands to prevent overtaking manual mode.
 	if(planeID == com.planeID)	{
