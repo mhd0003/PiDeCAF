@@ -96,10 +96,9 @@ void spinThread()	{
 }
 
 
-/*
+
 TEST(mover, state_runthrough)	{
 
-	boost::thread spinner(spinThread);
 
 	test_state_machine t;
 	ros::NodeHandle n;
@@ -146,18 +145,14 @@ TEST(mover, state_runthrough)	{
 	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
 	EXPECT_TRUE(t.ca_commands_silent());	
 
-//	ros::shutdown();
-//	spinner.join();
-
 }
-*/
+
 
 //Given that avoidance is turned off, feed goal wps to mover.
 //om nom nom
 
 TEST(mover, no_avoid_feeding)	{
 
-	boost::thread spinner(spinThread);
 	ros::Duration(7).sleep(); //let spinner thread startup 
 	
 	
@@ -222,8 +217,6 @@ TEST(mover, no_avoid_feeding)	{
 
 
 	fprintf(stderr, "test::TRYING TO SHTUDOWN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-	ros::shutdown();
-	spinner.join();
 
 }
 
@@ -231,6 +224,9 @@ TEST(mover, no_avoid_feeding)	{
 int main(int argc, char ** argv)	{
 	ros::init(argc, argv, "planeIDTester");
 	testing::InitGoogleTest(&argc, argv);
+	boost::thread spinner(spinThread);
 	ros::Time::init();
 	RUN_ALL_TESTS();
+	ros::shutdown();
+	spinner.join();
 }
