@@ -43,12 +43,12 @@ bool ipn::checkForThreats(Plane &thisPlane, std::map<int, Plane> &planeMap, wayp
 	ZEM_THRESHOLD = thisPlane.getGroundSpeed() * 3.5;
 
 	std::vector<threatInfo> allThreats;
-	allThreats.resize(planeMap.size());
 
 	/* (1) Get threat info for all planes */
 	std::map<int, Plane>::iterator it;
 	for (it = planeMap.begin(); it != planeMap.end(); it++) {
-		allThreats[it->first] = getThreatInfo(thisPlane, it->second);
+		allThreats.push_back(getThreatInfo(thisPlane, it->second));
+		//allThreats[it->first] = getThreatInfo(thisPlane, it->second);
 	}
 
 	/* (2) Determine greatest threat */
@@ -72,8 +72,11 @@ ipn::threatInfo ipn::getThreatInfo(Plane &thisPlane, Plane &otherPlane) {
 	Vector2D separation = getSeparationVector(thisPlane, otherPlane);
 	Vector2D direction = getDirectionVector(thisPlane, otherPlane);
 
+	if (separation.getX() == 0 && separation.getY() == 0) {
+		ROS_ERROR("Planes at same position?");
+	}
 	separationDistance = separation.getMagnitude();
-
+	
 	if (separationDistance > 0 && separationDistance < SEPARATION_THRESHOLD) {
 		t_go = -1.0 * separation.dot(direction)
 			/ (thisPlane.getGroundSpeed() * direction.dot(direction));

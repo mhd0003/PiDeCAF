@@ -43,7 +43,9 @@ au_uav_ros::Command au_uav_ros::CollisionAvoidance::avoid(au_uav_ros::Telemetry 
 }
 
 au_uav_ros::Command au_uav_ros::CollisionAvoidance::runIPN(au_uav_ros::Telemetry telem) {
-	ROS_INFO("CollisionAvoidance::avoid() me position: %f, %f, %f", thisPlane.getCurrentLocation().latitude, thisPlane.getCurrentLocation().longitude, thisPlane.getCurrentLocation().altitude);
+	ROS_INFO("CollisionAvoidance::avoid() thisPlane position: %f, %f, %f",
+		thisPlane.getCurrentLocation().latitude, thisPlane.getCurrentLocation().longitude,
+		thisPlane.getCurrentLocation().altitude);
 
 	au_uav_ros::Command command;
 	au_uav_ros::waypoint goalWaypoint;
@@ -54,12 +56,14 @@ au_uav_ros::Command au_uav_ros::CollisionAvoidance::runIPN(au_uav_ros::Telemetry
 	goalWaypoint.altitude = goal_wp.altitude;
 	goal_wp_lock.unlock();
 
+	ROS_ERROR("My planeID: %d. telem planeID: %d", thisPlane.getID(), telem.planeID);
+
 	command.planeID = thisPlane.getID();
 	command.commandID = 2;
 	command.param = 2;
-	command.latitude = goalWaypoint.latitude;
-	command.longitude = goalWaypoint.longitude;
-	command.altitude = goalWaypoint.altitude;
+	command.latitude = INVALID_GPS_COOR;
+	command.longitude = INVALID_GPS_COOR;
+	command.altitude = INVALID_GPS_COOR;
 	command.replace = true;
 
 	// thisPlane.setGoalWaypoint(goalWaypoint);
@@ -67,16 +71,21 @@ au_uav_ros::Command au_uav_ros::CollisionAvoidance::runIPN(au_uav_ros::Telemetry
 
 	if (thisPlane.getID() == telem.planeID) {
 		au_uav_ros::waypoint avoidanceWaypoint;
+		std::map<int, ipn::Plane> planeMap = thisPlane.getPlaneMap();
 
-		if (ipn::checkForThreats(thisPlane, thisPlane.getPlaneMap(), avoidanceWaypoint)) {
-			command.commandID = 2;
-			command.param = 2;
+		ROS_ERROR("Ooh! About to check for threats. thisPlane's map has %d planes", planeMap.size());
+
+		if (ipn::checkForThreats(thisPlane, planeMap, avoidanceWaypoint)) {
 			command.latitude = avoidanceWaypoint.latitude;
 			command.longitude = avoidanceWaypoint.longitude;
-			command.replace = true;
+			command.altitude = goalWaypoint.altitude;
+		} else {
+			command.latitude = goalWaypoint.latitude;
+			command.longitude = goalWaypoint.longitude;
+			command.altitude = goalWaypoint.altitude;
 		}
 	}
-
+	ROS_ERROR("%f, %f, %f", command.latitude, command.longitude, command.altitude);
 	return command;
 }
 

@@ -23,7 +23,7 @@ namespace ipn {
 		waypoint getAvoidanceWaypoint() const;
 		waypoint getGoalWaypoint() const;
 		waypoint getDestinationWaypoint() const;
-		std::map<int, Plane>& getPlaneMap();
+		std::map<int, Plane> getPlaneMap();
 
 		void setID(int idIn);
 		void setAvoidanceWaypoint(const waypoint &wpIn);

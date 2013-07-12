@@ -52,7 +52,7 @@ waypoint Plane::getDestinationWaypoint() const {
 	}
 }
 
-std::map<int, Plane>& Plane::getPlaneMap() {
+std::map<int, Plane> Plane::getPlaneMap() {
 	return planeMap;
 }
 
@@ -77,7 +77,11 @@ void Plane::update(const Telemetry &update) {
 }
 
 void Plane::updateThisPlane(const Telemetry &update) {
+	currentBearing = update.targetBearing;
 	updatePosition(update);
+
+	groundSpeed = update.groundSpeed;
+	// lastUpdate = update;
 
 	// waypoint destination;
 	// destination.latitude = update.destLatitude;
@@ -99,21 +103,20 @@ void Plane::updatePlaneMap(const Telemetry &update) {
 	if (planeMap.find(update.planeID) != planeMap.end()) {
 		planeMap[update.planeID].update(update);
 	} else {
-		planeMap[update.planeID] = Plane(update);
+		Plane newPlane(update);
+		planeMap[update.planeID] = newPlane;
 	}
 }
 
 void Plane::updatePosition(const Telemetry &update) {
-	waypoint previousLocation = currentLocation;
-
+	// waypoint previousLocation = currentLocation;
 	currentLocation.latitude = update.currentLatitude;
 	currentLocation.longitude = update.currentLongitude;
-
-	if (previousLocation != currentLocation) {
-		Vector2D positionUpdate(previousLocation, currentLocation);
-		currentBearing = positionUpdate.getAngle();
-	}
-
 	currentLocation.altitude = update.currentAltitude;
-	currentLocation.planeID = update.planeID;
+
+	// if (previousLocation != currentLocation) {
+	// 	Vector2D positionUpdate(previousLocation, currentLocation);
+	// 	currentBearing = positionUpdate.getAngle();
+	// }
+
 }

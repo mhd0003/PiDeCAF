@@ -1,6 +1,7 @@
 #ifndef _IPN_H_
 #define _IPN_H_
 
+#include "ros/ros.h"
 #include "au_uav_ros/plane.h"
 #include "au_uav_ros/vector2D.h"
 using au_uav_ros::Vector2D;
