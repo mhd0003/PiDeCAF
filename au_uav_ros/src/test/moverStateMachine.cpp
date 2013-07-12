@@ -12,7 +12,6 @@
 
 #include <boost/thread.hpp>
 
-//Really can't think of how to handle the plane ID delimma. Just don't get the planeID.. comment that bit out
 class test_state_machine {
 	public:
 	test_state_machine()	{
@@ -20,12 +19,16 @@ class test_state_machine {
 		lag.sec = 1;
 		sleep_time = 1.3;
 		stop.latitude = EMERGENCY_PROTOCOL_LAT;
-		stop.longitude = EMERGENCY_STOP_LON;
+		stop.longitude = META_STOP_LON;
 		stop.planeID = 999;
 
-		go.latitude = EMERGENCY_PROTOCOL_LAT;
-		go.longitude = EMERGENCY_START_LON;
-		go.planeID = 999;
+		go_ca_off.latitude = EMERGENCY_PROTOCOL_LAT;
+		go_ca_off.longitude = META_START_CA_OFF_LON;
+		go_ca_off.planeID = 999;
+		
+		go_ca_on.latitude = EMERGENCY_PROTOCOL_LAT;
+		go_ca_on.longitude = META_START_CA_ON_LON;
+		go_ca_on.planeID = 999;
 
 		regCom.latitude = 123;
 		regCom.longitude = 123;
@@ -79,7 +82,8 @@ class test_state_machine {
 	ros::Duration lag;	//one second lag OK from sending command to reponse
 
 	au_uav_ros::Command stop;
-	au_uav_ros::Command go;
+	au_uav_ros::Command go_ca_off;
+	au_uav_ros::Command go_ca_on;
 	au_uav_ros::Command regCom;
 
 	au_uav_ros::Command previousCom;			//don't want to pushback duplicate commands
@@ -117,33 +121,59 @@ TEST(mover, state_runthrough)	{
 	fprintf(stderr, "TEST::Expect start in NOGO\n");
 	EXPECT_TRUE(t.ca_commands_silent());	//No commands should have been sent within the last lag period.
 
+	//RED...
 
 	gcs.publish(t.stop); //publish stop...
-	EXPECT_TRUE(t.ca_commands_silent());	
+	EXPECT_TRUE(t.ca_commands_silent()) << "RED START | stop should be silent";	
 
 	gcs.publish(t.regCom);	//publish regular command
-	EXPECT_TRUE(t.ca_commands_silent());	
+	EXPECT_TRUE(t.ca_commands_silent()) << "RED START | regCom  should be silent";	
 
-	gcs.publish(t.go); //transition
-	
+	//RED->GREEN_CA_OFF
+	gcs.publish(t.go_ca_off); //transition
 	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
-	
-	EXPECT_TRUE(t.ca_commands_chatty());	
-
-	fprintf(stderr, "TEST::Expect next stage is OK\n");
-	//OK MODE
-	//-----------	
-	//IN OK mode... testing all inputs
-	gcs.publish(t.go);
-	EXPECT_TRUE(t.ca_commands_chatty()); 
+	EXPECT_TRUE(t.ca_commands_chatty()) << "RED -> GREEN_CA_OFF | CA_OFF should be chatty" ;	
 
 	gcs.publish(t.regCom);
-	EXPECT_TRUE(t.ca_commands_chatty());	
+	EXPECT_TRUE(t.ca_commands_chatty()) << "GREEN_CA_OFF | regCom should be chatty";	
 
-	gcs.publish(t.stop); //publish stop... transition back
-	
+	//GREEN_CA_OFF -> GREEN_CA_ON
+	gcs.publish(t.go_ca_on);
 	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
-	EXPECT_TRUE(t.ca_commands_silent());	
+	EXPECT_TRUE(t.ca_commands_chatty()) << "GREEN_CA_OFF -> GREEN_CA_ON | CA_ON should be chatty" ;
+	
+	gcs.publish(t.regCom);
+	EXPECT_TRUE(t.ca_commands_chatty()) << "GREEN_CA_ON | regCom should be chatty";	
+
+	//GREEN_CA_ON -> RED
+	gcs.publish(t.stop);
+	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
+	EXPECT_TRUE(t.ca_commands_silent()) << "GREEN_CA_ON -> RED| stop should be silent";		
+	
+	gcs.publish(t.regCom);
+	EXPECT_TRUE(t.ca_commands_silent()) << "RED | regCom should be silent";	
+
+	//RED->GREEN_CA_ON
+	gcs.publish(t.go_ca_on);
+	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
+	EXPECT_TRUE(t.ca_commands_chatty()) << "RED -> GREEN_CA_ON | CA_ON should be chatty";	
+	
+	gcs.publish(t.regCom);
+	EXPECT_TRUE(t.ca_commands_chatty()) << "GREEN_CA_ON | regCom should be chatty";	
+
+	//GREEN_CA_ON -> GREEN_CA_OFF
+	gcs.publish(t.go_ca_off); //transition
+	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
+	EXPECT_TRUE(t.ca_commands_chatty()) << "GREEN_CA_ON -> GREEN_CA_OFF | caOff should be chatty";	
+
+	gcs.publish(t.regCom);
+	EXPECT_TRUE(t.ca_commands_chatty()) << "GREEN_CA_OFF| regCom should be chatty";	
+
+	//GREEN_CA_OFF -> RED
+	gcs.publish(t.stop); //publish stop... transition back
+	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
+	EXPECT_TRUE(t.ca_commands_silent()) << "GREEN_CA_OFF -> RED | stop should be silent";	
+
 
 }
 
@@ -163,7 +193,7 @@ TEST(mover, no_avoid_feeding)	{
 	ros::Subscriber ca = n.subscribe("ca_commands", 10, &test_state_machine::ca_command_callback, &t);	
 	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
 	EXPECT_TRUE(t.ca_commands_silent());	
-	gcs.publish(t.go); //transition
+	gcs.publish(t.go_ca_off); //transition
 	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
 	EXPECT_TRUE(t.ca_commands_chatty());	
 
@@ -230,3 +260,4 @@ int main(int argc, char ** argv)	{
 	ros::shutdown();
 	spinner.join();
 }
+

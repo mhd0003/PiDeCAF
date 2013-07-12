@@ -195,7 +195,7 @@ void au_uav_ros::Mover::caCommandPublish()	{
 	ca_wp_lock.unlock();	
 
 	//don't want to forward deafult command, if no command is returned
-	if(com.latitude != INVALID_GPS_COOR && com.latitude !=0)
+//	if(com.latitude != INVALID_GPS_COOR && com.latitude !=0)
 		ca_commands.publish(com);
 
 }
@@ -213,8 +213,7 @@ int main(int argc, char **argv)	{
 	bool use_real_id = true;	
 	au_uav_ros::Mover mv;
 //	if(mv.init(n, use_real_id))
-	if(mv.init(n, false))
-	
+	if(mv.init(n, false))	//channnge if doing real planes to true
 		mv.run();	
 	//spin and do move logic in separate thread
 
