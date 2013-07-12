@@ -101,6 +101,7 @@ void au_uav_ros::Mover::move()	{
 		//we can still process telemetry updates quickly, but we only send 4 commands
 		//a second
 		ros::Duration(0.25).sleep();
+		/*
 		ca_wp_lock.lock();
 		empty_ca_q = ca_wp.empty();
 		if(!empty_ca_q)	{
@@ -112,7 +113,7 @@ void au_uav_ros::Mover::move()	{
 		//Check to see if current destination is any of these, if so, don't send don't send!
 
 		//If collision avoidance is empty, send goal_wp
-		/* Not needed for our algorithm
+		// Not needed for our algorithm
 		if(empty_ca_q)	{
 			com = goal_wp;	
 		}	
@@ -120,6 +121,10 @@ void au_uav_ros::Mover::move()	{
 
 		//Sending out command to ardupilot if it's different from current dest
 		
+		//Pass goal
+		goal_wp_lock.lock();
+		com = goal_wp;
+		goal_wp_lock.unlock();
 		ca_commands.publish(com);
 
 	}
