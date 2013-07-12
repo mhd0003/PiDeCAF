@@ -38,12 +38,14 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 	enum state temp;
 	if(com.latitude == EMERGENCY_PROTOCOL_LAT)	{
 		if(com.longitude == EMERGENCY_START_LON)	{
+			fprintf(stderr, "CHANGING TO START MODE\n");
 			//change state to OK
 			state_change_lock.lock();
 			current_state = ST_OK;
 			state_change_lock.unlock();
 		}
 		if(com.longitude == EMERGENCY_STOP_LON)	{
+			fprintf(stderr, "CHANGING TO NOGO MODE\n");
 			//change state to NOGO
 			state_change_lock.lock();
 			current_state = ST_NO_GO;
@@ -142,6 +144,7 @@ void au_uav_ros::Mover::move()	{
 
 //Assumes we are in ST_OK mode.
 void au_uav_ros::Mover::caCommandPublish()	{
+	fprintf(stderr, "mover::PUBLISHING COMMAND!\n");
 	au_uav_ros::Command com;
 	//If collision avoidance is NOT EMPTY, that takes precedence
 	bool empty_ca_q = false;
@@ -170,8 +173,8 @@ void au_uav_ros::Mover::spinThread()	{
 int main(int argc, char **argv)	{
 	ros::init(argc, argv, "ca_logic");
 	ros::NodeHandle n;
-	bool fake;
-	n.param("fake_id", fake, false);
+	//n.param("fake_id", fake , false); //not very successfull. set aside for later.
+	bool fake = true;	
 	au_uav_ros::Mover mv;
 	if(mv.init(n, fake))
 		mv.run();	
