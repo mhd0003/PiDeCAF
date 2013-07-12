@@ -41,5 +41,4 @@ void au_uav_ros::CollisionAvoidance::setGoalWaypoint(au_uav_ros::Command com)	{
 	goal_wp_lock.lock();
 	goal_wp = com;
 	goal_wp_lock.unlock();
-	goal_wp = com;
 }
