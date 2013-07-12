@@ -32,24 +32,38 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 }
 
 void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
-	
+
+	//State changing will be done in this function, instead of in move(). This GCS callback will be executed not as frequently as the move,
+	//since not many gcs commands will be coming in.
+
 	//TESTING STUFF - Quick Emergency Protocol - START and STOP publishing to ca_commands to prevent overtaking manual mode.
 	if(planeID == com.planeID)	{
 		enum state temp;
 		if(com.latitude == EMERGENCY_PROTOCOL_LAT)	{
-			if(com.longitude == EMERGENCY_START_LON)	{
-				fprintf(stderr, "CHANGING TO START MODE\n");
-				//change state to OK
+			int incomingCommand = (int)com.longitude;
+			switch(incomingCommand)	{
+			case(META_START_CA_ON_LON):	
+				fprintf(stderr, "Mover::CHANGING TO GREEN CA OFF MODE\n");
+				//change state to using CA 
 				state_change_lock.lock();
-				current_state = ST_OK;
+				current_state = ST_GREEN_CA_ON;
 				state_change_lock.unlock();
-			}
-			if(com.longitude == EMERGENCY_STOP_LON)	{
-				fprintf(stderr, "CHANGING TO NOGO MODE\n");
+				break;
+			//No matter the state, STOP publishing.
+			case(META_STOP_LON):	
+				fprintf(stderr, "Mover::CHANGING TO NOGO MODE\n");
 				//change state to NOGO
 				state_change_lock.lock();
-				current_state = ST_NO_GO;
+				current_state = ST_RED;
 				state_change_lock.unlock();
+				break;
+			case(META_START_CA_OFF_LON):
+				fprintf(stderr, "Mover::CHANGING TO GREEN CA ON MODE\n");
+				//change state to not using CA 
+				state_change_lock.lock();
+				current_state = ST_GREEN_CA_OFF;
+				state_change_lock.unlock();
+				break;
 			}
 		}
 		else	{
@@ -102,7 +116,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
 	//CA init
 	ca.init(planeID);
 
-	current_state = ST_NO_GO;
+	current_state = ST_RED;
 	return true;
 }
 
@@ -137,11 +151,15 @@ void au_uav_ros::Mover::move()	{
 		state_change_lock.unlock();
 		//then do some switching
 		switch(current_state)	{
-			case(ST_NO_GO):
+			case(ST_RED):
 				//DO NOT PUBLISH! DO NOT PUBLISH!
 				break;
-			case(ST_OK):
-				//ok publish.
+			case(ST_GREEN_CA_OFF):
+				ros::Duration(0.25).sleep(); 	//no swamping the ardupilot, it's a delicate thing 
+				goalCommandPublish();
+				break;
+			case(ST_GREEN_CA_ON):
+				ros::Duration(0.25).sleep(); 	//no swamping the ardupilot, it's a delicate thing 
 				caCommandPublish();
 				break;
 		}
@@ -149,17 +167,25 @@ void au_uav_ros::Mover::move()	{
 	}
 }
 
-//Assumes we are in ST_OK mode.
-void au_uav_ros::Mover::caCommandPublish()	{
-	fprintf(stderr, "mover::PUBLISHING COMMAND!\n");
+//Assumes we are in ST_GREEN_CA_OFF
+void au_uav_ros::Mover::goalCommandPublish()	{
+	fprintf(stderr, "mover::(ST_GREEN_CA_OFF) PUBLISHING goal COMMAND!\n");
 	au_uav_ros::Command com;
-	//If collision avoidance is NOT EMPTY, that takes precedence
+
+	//Just send out goal wp, no collision avoidance.
+	goal_wp_lock.lock();
+	com = goal_wp;	
+	goal_wp_lock.unlock();
+	ca_commands.publish(com);
+
+}
+
+//Assumes we are in ST_GREEN_CA_ON mode.
+void au_uav_ros::Mover::caCommandPublish()	{
+	fprintf(stderr, "mover::(ST_GREEN_CA_ON) PUBLISHING CA COMMAND!\n");
+	au_uav_ros::Command com;
+	
 	bool empty_ca_q = false;
-	//attempt to limit the number of commands sent to the ardupilot,
-	//we can still process telemetry updates quickly, but we only send 4 commands
-	//a second
-	ros::Duration(0.25).sleep();
-/*
 	ca_wp_lock.lock();
 	empty_ca_q = ca_wp.empty();
 	if(!empty_ca_q)	{
@@ -167,14 +193,10 @@ void au_uav_ros::Mover::caCommandPublish()	{
 		ca_wp.pop_front();	
 	}
 	ca_wp_lock.unlock();	
-*/
-	//Just send out goal wp, no collision avoidance.
-	goal_wp_lock.lock();
-	//problem - if goal_wp is uniitialized..
-	com = goal_wp;
-	goal_wp_lock.unlock();
-	ca_commands.publish(com);
 
+	//don't want to forward deafult command, if no command is returned
+	if(com.latitude != INVALID_GPS_COOR && com.latitude !=0)
+		ca_commands.publish(com);
 
 }
 
