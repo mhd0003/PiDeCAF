@@ -34,7 +34,8 @@ namespace au_uav_ros	{
 			CollisionAvoidance ca;
 
 			int planeID;					//current plane id
-
+			float initialLong, initialLat, initialAlt;	//First telemetry update, used to initialize goal_wp
+			
 			//Queues for Waypoints
 			au_uav_ros::Command goal_wp;			//store goal wp from Ground control 
 			std::deque<au_uav_ros::Command> ca_wp;	 	//store collision avoidance waypoints 

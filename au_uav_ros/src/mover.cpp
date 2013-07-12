@@ -86,7 +86,13 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
 		au_uav_ros::planeIDGetter srv;
 		if(IDclient.call(srv))	{
 			ROS_INFO("mover::init Got plane ID %d", srv.response.planeID);
+			ROS_INFO("mover::init Got initial position lat: %f|long: %f|alt: %f",
+					srv.response.initialLatitude, srv.response.initialLongitude, srv.response.initialAltitude);
 			planeID = srv.response.planeID;
+			goal_wp.planeID = planeID;
+			goal_wp.latitude = initialLat = srv.response.initialLatitude;
+			goal_wp.longitude= initialLong = srv.response.initialLongitude;
+			goal_wp.latitude = initialAlt = srv.response.initialLatitude;
 		}
 		else	{
 			ROS_ERROR("mover::init Unsuccessful get plane ID call.");//what to do here.... keep trying?
@@ -139,6 +145,7 @@ void au_uav_ros::Mover::move()	{
 				caCommandPublish();
 				break;
 		}
+		
 	}
 }
 
@@ -163,6 +170,7 @@ void au_uav_ros::Mover::caCommandPublish()	{
 */
 	//Just send out goal wp, no collision avoidance.
 	goal_wp_lock.lock();
+	//problem - if goal_wp is uniitialized..
 	com = goal_wp;
 	goal_wp_lock.unlock();
 	ca_commands.publish(com);
@@ -182,7 +190,9 @@ int main(int argc, char **argv)	{
 	//n.param("fake_id", fake , false); //not very successfull. set aside for later.
 	bool use_real_id = true;	
 	au_uav_ros::Mover mv;
-	if(mv.init(n, use_real_id))
+//	if(mv.init(n, use_real_id))
+	if(mv.init(n, false))
+	
 		mv.run();	
 	//spin and do move logic in separate thread
 
