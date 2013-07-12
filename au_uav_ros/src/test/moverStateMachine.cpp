@@ -19,12 +19,15 @@ class test_id_srv {
 
 		stop.latitude = EMERGENCY_PROTOCOL_LAT;
 		stop.longitude = EMERGENCY_STOP_LON;
+		stop.planeID = 999;
 
 		go.latitude = EMERGENCY_PROTOCOL_LAT;
 		go.longitude = EMERGENCY_START_LON;
+		go.planeID = 999;
 
 		regCom.latitude = 123;
 		regCom.longitude = 123;
+		regCom.planeID = 999;
 	}
 
 
