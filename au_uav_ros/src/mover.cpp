@@ -82,7 +82,7 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 //node functions
 //----------------------------------------------------
 
-bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
+bool au_uav_ros::Mover::init(ros::NodeHandle n, bool _test)	{
 	//Ros stuff
 	nh = n;
 
@@ -94,7 +94,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
 
 	//Find out my Plane ID.
 	//-> need timed call? or keep trying to get plane id???
-	if(!real_id)
+	if(_test)
 		planeID = 999;
 	else	{
 		au_uav_ros::planeIDGetter srv;
@@ -117,6 +117,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
 	ca.init(planeID);
 
 	current_state = ST_RED;
+	is_testing = _test;
 	return true;
 }
 
@@ -209,11 +210,14 @@ void au_uav_ros::Mover::spinThread()	{
 int main(int argc, char **argv)	{
 	ros::init(argc, argv, "ca_logic");
 	ros::NodeHandle n;
-	//n.param("fake_id", fake , false); //not very successfull. set aside for later.
-	bool use_real_id = true;	
+
+	bool is_test;
+	n.param<bool>("testing", is_test, false);
 	au_uav_ros::Mover mv;
-//	if(mv.init(n, use_real_id))
-	if(mv.init(n, false))	//channnge if doing real planes to true
+	
+	fprintf(stderr, "MOVER::Testing var is %d", (int)is_test);
+	
+	if(mv.init(n, is_test))	//channnge if doing real planes to true
 		mv.run();	
 	//spin and do move logic in separate thread
 

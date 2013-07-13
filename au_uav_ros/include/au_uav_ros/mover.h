@@ -25,6 +25,8 @@
 namespace au_uav_ros	{
 	class Mover {
 		private:
+			bool is_testing;
+			
 			//Meta - State Machine fun. NOte - State is changed by gcs_command callback.
 			enum state {ST_RED, ST_GREEN_CA_ON, ST_GREEN_CA_OFF};	
 			enum state current_state; 
@@ -79,7 +81,7 @@ namespace au_uav_ros	{
 			void goalCommandPublish();
 		public:
 			int getPlaneID() {return planeID;} 
-			bool init(ros::NodeHandle n, bool fake);
+			bool init(ros::NodeHandle n, bool testing);
 			void run();
 
 	};

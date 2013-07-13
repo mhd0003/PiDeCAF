@@ -99,6 +99,12 @@ void spinThread()	{
 	ros::spin();
 }
 
+TEST(mover, amTesting)	{
+	ros::NodeHandle n;
+	bool t;
+	n.getParam("testing", t);
+	ASSERT_TRUE(t);
+}
 
 
 TEST(mover, state_runthrough)	{
