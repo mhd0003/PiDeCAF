@@ -66,7 +66,7 @@ PlaneObject::PlaneObject(double cRadius, const Telemetry &msg) {
 	this->previousLoc.latitude = 0.0;
 	this->previousLoc.longitude = 0.0;
 	this->targetBearing = msg.targetBearing;
-	this->currentBearing = 0.0;
+	this->currentBearing = msg.targetBearing;
 
 	this->speed = msg.groundSpeed;
 	//this->destination.latitude = msg.destLatitude;
