@@ -90,6 +90,7 @@ double ForceField::findForceMagnitude(fsquared::relativeCoordinates positionInFi
 OvalField::OvalField(){
 	shapeParams.gamma = 1500;
 	shapeParams.alphaTop = .5;
+	shapeParams.alphaBot = .5;
 	shapeParams.betaTop = .25;
 	shapeParams.betaBot = 1.6;
 }
