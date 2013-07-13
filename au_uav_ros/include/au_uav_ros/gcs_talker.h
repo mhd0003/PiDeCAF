@@ -26,7 +26,7 @@
 namespace au_uav_ros{
 	class GCSTalker	{
 	private:
-		SerialTalker m_gcs;
+		SerialTalker xbee_talker;
 		std::string m_port;
 		int m_baud;
 
