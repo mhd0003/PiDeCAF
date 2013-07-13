@@ -4,6 +4,7 @@
 
 #include <errno.h>	
 #include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
 #include <stdio.h>	//fprintf for debugging
 
 //ros stuff
@@ -19,6 +20,9 @@
 
 //mavlink stuff
 #include "mavlink/v1.0/common/mavlink.h"
+
+//functions for print info
+#include "au_uav_ros/standardFuncs.h"
 /*
  * Possible bug. Unable to contact roscore, need to put in provision?
  *

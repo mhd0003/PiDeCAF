@@ -39,7 +39,7 @@ generate_messages(DEPENDENCIES
   std_msgs
 )
 
-#add_library(standardFuncs src/standardFuncs.cpp include/au_uav_ros/standardFuncs.h)
+add_library(standardFuncs src/standardFuncs.cpp include/au_uav_ros/standardFuncs.h)
 #add_library(standardDefs src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
 #add_library(planeBuilder src/planeBuilder.cpp include/au_uav_ros/planeBuilder.h src/standardDefs.cpp include/au_uav_ros/standardDefs.h)
 #add_library(planeBuilder src/planeBuilder.cpp include/au_uav_ros/planeBuilder.h)
@@ -61,17 +61,17 @@ add_library(fsquared src/planeObject.cpp src/Fsquared.cpp src/vmath.cpp src/Forc
 #Xbee talker
 add_executable(xbee src/xbee_talker.cpp)
 add_dependencies(xbee ${PROJECT_NAME}_gencpp)
-target_link_libraries(xbee serial_talker mavlink_fun)
+target_link_libraries(xbee serial_talker mavlink_fun standardFuncs)
 
 #ardu talker
 add_executable(ardu src/ardu_talker.cpp)
 add_dependencies(ardu ${PROJECT_NAME}_gencpp)
-target_link_libraries(ardu serial_talker mavlink_fun)
+target_link_libraries(ardu serial_talker mavlink_fun standardFuncs)
 
 #GCS talker
 add_executable(gcs src/gcs_talker.cpp)
 add_dependencies(gcs ${PROJECT_NAME}_gencpp)
-target_link_libraries(gcs serial_talker mavlink_fun)
+target_link_libraries(gcs serial_talker mavlink_fun standardFuncs)
 
 #mover
 add_executable(mover src/mover.cpp)

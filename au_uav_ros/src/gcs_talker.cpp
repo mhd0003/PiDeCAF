@@ -80,21 +80,17 @@ void au_uav_ros::GCSTalker::listen()	{
 		if(message.msgid == MAVLINK_MSG_ID_AU_UAV)
 		{
 			ROS_INFO("Received AU_UAV message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.sysid, message.compid);
-			if(message.sysid == 255)	{	
-				//ignore. it's from "ME" the smart plane
-			}
-			else	{
-				au_uav_ros::Telemetry tUpdate, tRawUpdate;
-				mavlink_au_uav_t myMSG;
-				mavlink_msg_au_uav_decode(&message, &myMSG);
+			au_uav_ros::Telemetry tUpdate, tRawUpdate;
+			mavlink_au_uav_t myMSG;
+			mavlink_msg_au_uav_decode(&message, &myMSG);
 				
-				//Post update as new telemetry update
-				au_uav_ros::mav::convertMavlinkTelemetryToROS(myMSG, tUpdate);
-				tUpdate.planeID = message.sysid;
-				m_telem_pub.publish(tUpdate);
-				ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
+			//Post update as new telemetry update
+			au_uav_ros::mav::convertMavlinkTelemetryToROS(myMSG, tUpdate);
+			tUpdate.planeID = message.sysid;
+			m_telem_pub.publish(tUpdate);
+			ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);
 
-
+			if(message.sysid != 255){
 				//Forward raw telemetry update to the xbee_talker node
 				au_uav_ros::mav::rawMavlinkTelemetryToRawROSTelemetry(myMSG, tRawUpdate);
 				tRawUpdate.planeID = message.sysid;
@@ -165,7 +161,7 @@ int main(int argc, char** argv)	{
 
 	std::cout << "hello world!" <<std::endl;
 	std::string port = "/dev/ttyUSB0";
-	if(argc > 2)
+	if(argc > 1)
 		port.assign(argv[1]);
 	ros::init(argc, argv, "GCSTalker");
 	ros::NodeHandle n;
