@@ -159,7 +159,8 @@ int main(int argc, char** argv)	{
 
 	std::cout << "hello world!" <<std::endl;
 	std::string port = "/dev/ttyUSB0";
-
+	if(argc > 2)
+		port.assign(argv[1]);
 	ros::init(argc, argv, "GCSTalker");
 	ros::NodeHandle n;
 	au_uav_ros::GCSTalker talk(port, 57600);
