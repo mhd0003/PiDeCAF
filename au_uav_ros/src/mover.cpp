@@ -8,26 +8,26 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 	//It's OK to have movement/publishing ca-commands here, since this will be called
 	//when ardupilot publishes *my* telemetry msgs too.
 
-	au_uav_ros::Command com = ca.avoid(telem);	
-
+	au_uav_ros::Command com;
+	if(!is_testing)
+		com = ca.avoid(telem);	
+	else	{
+		//Using goal_wp as our "avoidance" wp, for testing.
+		goal_wp_lock.lock();
+		com = goal_wp;	//something ain't working right T.T
+		com.replace = true; 	
+		goal_wp_lock.unlock();
+		fprintf(stderr, "\nmover::telem_callback goalwp(%f|%f|%f)\n", com.latitude, com.longitude, com.altitude);
+	}
 	//Check if ca_waypoint should be ignored
 	if(com.latitude == INVALID_GPS_COOR && com.longitude == INVALID_GPS_COOR && com.altitude == INVALID_GPS_COOR)	{
 		//ignore.
 	}		
 	else	{
-		//Check if collision avoidance waypoint should be queued up, or replace all previous ca waypoints.	
-		if(!com.replace)	{
-			ca_wp_lock.lock();
-			ca_wp.push_back(com);	
-			ca_wp_lock.unlock();	
-		}
-		else{
-			ca_wp_lock.lock();
-			ca_wp.clear();
-			ca_wp.push_back(com);	
-			ca_wp_lock.unlock();	
-		
-		}
+		ca_wp_lock.lock();
+		ca_wp.clear();
+		ca_wp.push_back(com);	
+		ca_wp_lock.unlock();	
 	}
 }
 
@@ -72,7 +72,8 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 			goal_wp_lock.lock();
 			goal_wp = com;	
 			goal_wp_lock.unlock();
-			ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
+//			ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
+			fprintf(stderr, "mover::callback::Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
 			ca.setGoalWaypoint(com);
 
 		}	
@@ -82,7 +83,7 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 //node functions
 //----------------------------------------------------
 
-bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
+bool au_uav_ros::Mover::init(ros::NodeHandle n, bool _test)	{
 	//Ros stuff
 	nh = n;
 
@@ -94,7 +95,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
 
 	//Find out my Plane ID.
 	//-> need timed call? or keep trying to get plane id???
-	if(!real_id)
+	if(_test)
 		planeID = 999;
 	else	{
 		au_uav_ros::planeIDGetter srv;
@@ -119,6 +120,7 @@ bool au_uav_ros::Mover::init(ros::NodeHandle n, bool real_id)	{
 	ca.init(planeID);
 
 	current_state = ST_RED;
+	is_testing = _test;
 	return true;
 }
 
@@ -211,11 +213,14 @@ void au_uav_ros::Mover::spinThread()	{
 int main(int argc, char **argv)	{
 	ros::init(argc, argv, "ca_logic");
 	ros::NodeHandle n;
-	//n.param("fake_id", fake , false); //not very successfull. set aside for later.
-	bool use_real_id = true;	
+
+	bool is_test;
+	n.param<bool>("testing", is_test, false);
 	au_uav_ros::Mover mv;
-//	if(mv.init(n, use_real_id))
-	if(mv.init(n, true))	//channnge if doing real planes to true
+	
+	fprintf(stderr, "MOVER::Testing var is %d", (int)is_test);
+	
+	if(mv.init(n, is_test))	//channnge if doing real planes to true
 		mv.run();	
 	//spin and do move logic in separate thread
 
