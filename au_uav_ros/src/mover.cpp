@@ -8,8 +8,17 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 	//It's OK to have movement/publishing ca-commands here, since this will be called
 	//when ardupilot publishes *my* telemetry msgs too.
 
-	au_uav_ros::Command com = ca.avoid(telem);	
-
+	au_uav_ros::Command com;
+	if(!is_testing)
+		com = ca.avoid(telem);	
+	else	{
+		//Using goal_wp as our "avoidance" wp, for testing.
+		goal_wp_lock.lock();
+		com = goal_wp;	//something ain't working right T.T
+		com.replace = true;
+		goal_wp_lock.unlock();
+		fprintf(stderr, "\nmover::telem_callback goalwp(%f|%f|%f)\n", com.latitude, com.longitude, com.altitude);
+	}
 	//Check if ca_waypoint should be ignored
 	if(com.latitude == INVALID_GPS_COOR && com.longitude == INVALID_GPS_COOR && com.altitude == INVALID_GPS_COOR)	{
 		//ignore.
@@ -72,7 +81,8 @@ void au_uav_ros::Mover::gcs_command_callback(au_uav_ros::Command com)	{
 			goal_wp_lock.lock();
 			goal_wp = com;	
 			goal_wp_lock.unlock();
-			ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
+//			ROS_INFO("Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
+			fprintf(stderr, "mover::callback::Received new command with lat%f|lon%f|alt%f", com.latitude, com.longitude, com.altitude);
 			ca.setGoalWaypoint(com);
 
 		}	
