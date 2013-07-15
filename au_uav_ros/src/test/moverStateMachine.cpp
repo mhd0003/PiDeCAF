@@ -143,7 +143,7 @@ void spinThread()	{
 //Publish my own fake telemetry. Force ca.avoid to be called
 void pubTelem()	{
 	fprintf(stderr, "pub telem thread:: spinning... \n");
-	ros::Rate r(3);		//publish telem - this rate WILL end in dropped :w
+	ros::Rate r(4);	//publish telem - this rate WILL end in dropped :w
 
 
 	//ros publish

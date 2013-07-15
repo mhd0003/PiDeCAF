@@ -15,7 +15,7 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 		//Using goal_wp as our "avoidance" wp, for testing.
 		goal_wp_lock.lock();
 		com = goal_wp;	//something ain't working right T.T
-		com.replace = true;
+		com.replace = true; 	
 		goal_wp_lock.unlock();
 		fprintf(stderr, "\nmover::telem_callback goalwp(%f|%f|%f)\n", com.latitude, com.longitude, com.altitude);
 	}
@@ -24,19 +24,10 @@ void au_uav_ros::Mover::all_telem_callback(au_uav_ros::Telemetry telem)	{
 		//ignore.
 	}		
 	else	{
-		//Check if collision avoidance waypoint should be queued up, or replace all previous ca waypoints.	
-		if(!com.replace)	{
-			ca_wp_lock.lock();
-			ca_wp.push_back(com);	
-			ca_wp_lock.unlock();	
-		}
-		else{
-			ca_wp_lock.lock();
-			ca_wp.clear();
-			ca_wp.push_back(com);	
-			ca_wp_lock.unlock();	
-		
-		}
+		ca_wp_lock.lock();
+		ca_wp.clear();
+		ca_wp.push_back(com);	
+		ca_wp_lock.unlock();	
 	}
 }
 
