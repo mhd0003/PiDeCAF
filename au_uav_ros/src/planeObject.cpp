@@ -141,7 +141,7 @@ bool PlaneObject::update(const Telemetry &msg, Command &newCommand) {
 	{ 
 			this->setCurrentBearing(toCardinal(angle));
 	}
-	else this->setCurrentBearing(0.0);
+	// else this->setCurrentBearing(0.0);
 
 	// Update everything else
 	this->setTargetBearing(msg.targetBearing);
@@ -483,4 +483,29 @@ Command PlaneObject::getPriorityCommand(void) {
 	//ret.commandHeader.seq = this->commandIndex++;
 	ret.commandHeader.stamp = ros::Time::now();
 	return ret;
+}
+
+void PlaneObject::update(const Telemetry &msg) {
+	if (this->id == msg.planeID) {
+		setCurrentLoc(msg.currentLatitude, msg.currentLongitude, msg.currentAltitude);
+		setCurrentBearing(toCartesian(msg.targetBearing));
+		setTargetBearing(toCartesian(msg.targetBearing));
+		setSpeed(msg.groundSpeed);
+
+		waypoint wp;
+		wp.latitude = msg.destLatitude;
+		wp.longitude = msg.destLongitude;
+		wp.altitude = msg.destAltitude;
+		setDestination(wp);
+
+	} else {
+		std::map<int, PlaneObject>::iterator it = planesToAvoid.find(msg.planeID);
+
+		if (it != planesToAvoid.end()) {
+			it->second.update(msg);
+		} else {
+			planesToAvoid[msg.planeID] = PlaneObject(msg.planeID);
+			planesToAvoid[msg.planeID].update(msg);
+		}
+	}
 }

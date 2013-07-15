@@ -19,11 +19,11 @@ using namespace au_uav_ros;
 #define MAXIMUM_TURNING_ANGLE 22.5 //degrees
 
 
-Vector2D ipn::getSeparationVector(const Plane &plane1, const Plane &plane2) {
-	return Vector2D(plane1.getCurrentLocation(), plane2.getCurrentLocation());
+Vector2D ipn::getSeparationVector(const PlaneObject &plane1, const PlaneObject &plane2) {
+	return Vector2D(plane1.getCurrentLoc(), plane2.getCurrentLoc());
 }
 
-Vector2D ipn::getDirectionVector(const Plane &plane1, const Plane &plane2) {
+Vector2D ipn::getDirectionVector(const PlaneObject &plane1, const PlaneObject &plane2) {
 	Vector2D d_1(cos(plane1.getCurrentBearing()*DEGREES_TO_RADIANS),
 		sin(plane1.getCurrentBearing()*DEGREES_TO_RADIANS));
 	Vector2D d_2(cos(plane2.getCurrentBearing()*DEGREES_TO_RADIANS),
@@ -37,40 +37,39 @@ Vector2D ipn::getDirectionVector(const Plane &plane1, const Plane &plane2) {
 * (2) Determine greatest threat (if any)
 * (3) Generate avoidance waypoint
 */
-bool ipn::checkForThreats(Plane &thisPlane, std::map<int, Plane> &planeMap, waypoint &avoidanceWP) {
+bool ipn::checkForThreats(PlaneObject &thisPlane, std::map<int, PlaneObject> &allPlanes, waypoint &avoidanceWP) {
 	/* Set threshold values for this plane's speed */
-	SEPARATION_THRESHOLD = thisPlane.getGroundSpeed() * 10.0;
-	ZEM_THRESHOLD = thisPlane.getGroundSpeed() * 3.5;
+	SEPARATION_THRESHOLD = thisPlane.getSpeed() * 10.0;
+	ZEM_THRESHOLD = thisPlane.getSpeed() * 3.5;
 
 	std::vector<threatInfo> allThreats;
 
 	/* (1) Get threat info for all planes */
-	std::map<int, Plane>::iterator it;
-	for (it = planeMap.begin(); it != planeMap.end(); it++) {
+	std::map<int, PlaneObject>::iterator it;
+	for (it = allPlanes.begin(); it != allPlanes.end(); it++) {
 		if (thisPlane.getID() == it->first) {
-			ROS_INFO("$!$!$!$ Plane in my map with same ID! $!$!$!$!$!");
+			ROS_WARN("$!$!$!$ Plane in my map with same ID! $!$!$!$");
 			continue;
 		}
 
 		allThreats.push_back(getThreatInfo(thisPlane, it->second));
-		//allThreats[it->first] = getThreatInfo(thisPlane, it->second);
 	}
 
 	/* (2) Determine greatest threat */
-	threatInfo* greatestThreat = findGreatestThreat(allThreats);
+	threatInfo greatestThreat = findGreatestThreat(allThreats);
 
-	if (greatestThreat == NULL) {
+	if (greatestThreat.threatPlane == NULL) {
 		return false;
 	}
 
 	/* (3) Generate avoidance waypoint */
-	avoidanceWP = createAvoidanceWaypoint(thisPlane, *greatestThreat);
-
+	avoidanceWP = createAvoidanceWaypoint(thisPlane, greatestThreat);
+	avoidanceWP.planeID = thisPlane.getID();
 	return true;
 }
 
 /* Return a container with info used to determine threat danger */
-ipn::threatInfo ipn::getThreatInfo(Plane &thisPlane, Plane &otherPlane) {
+ipn::threatInfo ipn::getThreatInfo(PlaneObject &thisPlane, PlaneObject &otherPlane) {
 	double separationDistance, t_go, ZEM;
 
 	Vector2D separation = getSeparationVector(thisPlane, otherPlane);
@@ -83,10 +82,10 @@ ipn::threatInfo ipn::getThreatInfo(Plane &thisPlane, Plane &otherPlane) {
 	
 	if (separationDistance > 0 && separationDistance < SEPARATION_THRESHOLD) {
 		t_go = -1.0 * separation.dot(direction)
-			/ (thisPlane.getGroundSpeed() * direction.dot(direction));
+			/ (thisPlane.getSpeed() * direction.dot(direction));
 		ZEM = sqrt( separation.dot(separation)
-			+ 2*thisPlane.getGroundSpeed()*t_go*separation.dot(direction)
-			+ pow(thisPlane.getGroundSpeed()*t_go, 2)*direction.dot(direction) );
+			+ 2*thisPlane.getSpeed()*t_go*separation.dot(direction)
+			+ pow(thisPlane.getSpeed()*t_go, 2)*direction.dot(direction) );
 
 	} else {
 		t_go = std::numeric_limits<double>::max();
@@ -113,30 +112,38 @@ ipn::threatInfo ipn::getThreatInfo(Plane &thisPlane, Plane &otherPlane) {
 
 /* Return pointer to threat with greatest danger of collision */
 /* Returns NULL if none of the threats need avoidance */
-ipn::threatInfo* ipn::findGreatestThreat(std::vector<threatInfo> &allThreats) {
+ipn::threatInfo ipn::findGreatestThreat(std::vector<threatInfo> &allThreats) {
 	int i;
 	double t_go, ZEM;
 	int size = allThreats.size();
-	threatInfo* greatestThreat = NULL;
+	threatInfo greatestThreat; // = NULL;
+	greatestThreat.threatPlane == NULL;
 
 	for (i = 0; i < size; i++) {
 		t_go = allThreats[i].t_go;
 		ZEM = allThreats[i].ZEM;
 
-		if (ZEM < 0 || t_go < 0 || ZEM > ZEM_THRESHOLD || t_go > T_GO_THRESHOLD) {
+		//if (ZEM < 0 || t_go < 0 || ZEM > ZEM_THRESHOLD || t_go > T_GO_THRESHOLD) {
+		if (ZEM < 0 || t_go < 0 || ZEM > ZEM_THRESHOLD) {
 			continue;
 		}
 
-		if (fabs( allThreats[i].separation.getAngle() ) > 67.5) {
-			continue;
-		}
+		// if (fabs( allThreats[i].separation.getAngle() ) > 67.5) {
+		// 	continue;
+		// }
 
-		if (greatestThreat == NULL) {
-			greatestThreat = &allThreats[i];
+		if (greatestThreat.threatPlane == NULL) {
+			greatestThreat = allThreats[i];
 		} else if (ZEM <= CONFLICT_THRESHOLD) {
-			greatestThreat = &allThreats[i];
-		} else if (t_go < greatestThreat->t_go && greatestThreat->ZEM > CONFLICT_THRESHOLD) {
-			greatestThreat = &allThreats[i];
+			if (greatestThreat.ZEM <= CONFLICT_THRESHOLD) {
+				if (t_go < greatestThreat.t_go || ZEM < greatestThreat.ZEM) {
+					greatestThreat = allThreats[i];
+				}
+			} else {
+				greatestThreat = allThreats[i];
+			}
+		} else if (t_go < greatestThreat.t_go && greatestThreat.ZEM > CONFLICT_THRESHOLD) {
+			greatestThreat = allThreats[i];
 		}
 	}
 
@@ -144,7 +151,7 @@ ipn::threatInfo* ipn::findGreatestThreat(std::vector<threatInfo> &allThreats) {
 }
 
 /*  */
-bool ipn::shouldTurnRight(Plane &thisPlane, threatInfo &threat) {
+bool ipn::shouldTurnRight(PlaneObject &thisPlane, threatInfo &threat) {
 	bool turnRight;
 
 	double thisPlaneBearing = thisPlane.getCurrentBearing();
@@ -167,9 +174,9 @@ bool ipn::shouldTurnRight(Plane &thisPlane, threatInfo &threat) {
 }
 
 /*  */
-waypoint ipn::createAvoidanceWaypoint(Plane &thisPlane, threatInfo &threat) {
+waypoint ipn::createAvoidanceWaypoint(PlaneObject &thisPlane, threatInfo &threat) {
 	waypoint wp;
-	waypoint currentLoc = thisPlane.getCurrentLocation();
+	waypoint currentLoc = thisPlane.getCurrentLoc();
 	double currentBearing = thisPlane.getCurrentBearing() * DEGREES_TO_RADIANS;
 	double newBearing;
 	double turnAngle = MAXIMUM_TURNING_ANGLE * exp(-1.0 * threat.ZEM / ZEM_THRESHOLD);
@@ -178,8 +185,8 @@ waypoint ipn::createAvoidanceWaypoint(Plane &thisPlane, threatInfo &threat) {
 	}
 	newBearing = currentBearing + turnAngle * DEGREES_TO_RADIANS;
 
-	wp.latitude = currentLoc.latitude + thisPlane.getGroundSpeed() * sin(newBearing) / threat.separation.getLatToMeters();
-	wp.longitude = currentLoc.longitude + thisPlane.getGroundSpeed() * cos(newBearing) / threat.separation.getLonToMeters();
+	wp.latitude = currentLoc.latitude + thisPlane.getSpeed() * sin(newBearing) / threat.separation.getLatToMeters();
+	wp.longitude = currentLoc.longitude + thisPlane.getSpeed() * cos(newBearing) / threat.separation.getLonToMeters();
 	wp.altitude = currentLoc.altitude;
 
 	return wp;

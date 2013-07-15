@@ -4,7 +4,6 @@ void au_uav_ros::CollisionAvoidance::init(int planeID)	{
 
 	ROS_INFO("CollisionAvoidance:init()");
 	me.setID(planeID);
-	thisPlane.setID(planeID);
 
 }
 
@@ -42,51 +41,92 @@ au_uav_ros::Command au_uav_ros::CollisionAvoidance::avoid(au_uav_ros::Telemetry 
 	}
 }
 
+/*
+ * If the update is from another plane, I update my map.
+ * I return a command with INVALID_GPS_COOR
+ * 
+ * If the update is from me, I update my "me" planeObject.
+ * I run IPN to check for threats. If I'm avoiding a threat,
+ * I get a waypoint from IPN. If I'm not in danger, I send 
+ * a command with my goal waypoint.
+ */
 au_uav_ros::Command au_uav_ros::CollisionAvoidance::runIPN(au_uav_ros::Telemetry telem) {
-	ROS_INFO("CollisionAvoidance::avoid() thisPlane position: %f, %f, %f",
-		thisPlane.getCurrentLocation().latitude, thisPlane.getCurrentLocation().longitude,
-		thisPlane.getCurrentLocation().altitude);
+	using au_uav_ros::Command;
+	using au_uav_ros::PlaneObject;
+	using au_uav_ros::waypoint;
 
-	au_uav_ros::Command command;
-	au_uav_ros::waypoint goalWaypoint;
+	// Debug statement options
+	bool printMePosition = true;
+	bool printTelemID = true;
+	bool printGoalWP = true;
+	bool printCommand = true;
 
+	Command command;
+	waypoint goalWP;
+
+	// Get the current goal waypoint
 	goal_wp_lock.lock();
-	goalWaypoint.latitude = goal_wp.latitude;
-	goalWaypoint.longitude = goal_wp.longitude;
-	goalWaypoint.altitude = goal_wp.altitude;
+	goalWP.latitude = goal_wp.latitude;
+	goalWP.longitude = goal_wp.longitude;
+	goalWP.altitude = goal_wp.altitude;
 	goal_wp_lock.unlock();
 
-	ROS_INFO("My planeID: %d. telem planeID: %d", thisPlane.getID(), telem.planeID);
+	// Update the plane
+	me.update(telem);
+	me.setDestination(goalWP);
 
-	command.planeID = thisPlane.getID();
-	command.commandID = 2;
+
+
+	if (printMePosition) {
+		ROS_INFO("CollisionAvoidance::runIPN() me position: #%d - (%f, %f, %f)",
+			me.getID(), me.getCurrentLoc().latitude, me.getCurrentLoc().longitude,
+			me.getCurrentLoc().altitude);
+	}
+	if (printTelemID) {
+		ROS_INFO("telem planeID: %d", me.getID(), telem.planeID);
+	}
+	if (printGoalWP) {
+		ROS_INFO("goal_wp: (%f, %f, %f)",
+			goalWP.latitude, goalWP.longitude,
+			goalWP.altitude);
+	}
+
+	
+	if (me.getID() == telem.planeID) {
+		waypoint avoidanceWP;
+		std::map<int, PlaneObject> allPlanes = me.getMap();
+
+		int mapSize = allPlanes.size();
+		ROS_INFO("Ooh! About to check for threats. me's map has %d planes", mapSize);
+
+		if (ipn::checkForThreats(me, allPlanes, avoidanceWP)) {
+			command.commandID = 2;
+			command.latitude = avoidanceWP.latitude;
+			command.longitude = avoidanceWP.longitude;
+			command.altitude = goalWP.altitude;
+		} else {
+			command.commandID = 1;
+			command.latitude = goalWP.latitude;
+			command.longitude = goalWP.longitude;
+			command.altitude = goalWP.altitude;
+		}
+	} else {
+		// TODO: Check if reached waypoint
+		command.commandID = 2;
+		command.latitude = INVALID_GPS_COOR;
+		command.longitude = INVALID_GPS_COOR;
+		command.altitude = INVALID_GPS_COOR;
+	}
+
+	command.planeID = me.getID();
 	command.param = 2;
-	command.latitude = INVALID_GPS_COOR;
-	command.longitude = INVALID_GPS_COOR;
-	command.altitude = INVALID_GPS_COOR;
 	command.replace = true;
 
-	// thisPlane.setGoalWaypoint(goalWaypoint);
-	thisPlane.update(telem);
-
-	if (thisPlane.getID() == telem.planeID) {
-		au_uav_ros::waypoint avoidanceWaypoint;
-		std::map<int, ipn::Plane> planeMap = thisPlane.getPlaneMap();
-
-		int mapSize = planeMap.size();
-		ROS_INFO("Ooh! About to check for threats. thisPlane's map has %d planes", mapSize);
-
-		if (ipn::checkForThreats(thisPlane, planeMap, avoidanceWaypoint)) {
-			command.latitude = avoidanceWaypoint.latitude;
-			command.longitude = avoidanceWaypoint.longitude;
-			command.altitude = goalWaypoint.altitude;
-		} else {
-			command.latitude = goalWaypoint.latitude;
-			command.longitude = goalWaypoint.longitude;
-			command.altitude = goalWaypoint.altitude;
-		}
+	if (printCommand) {
+		ROS_INFO("Returning command: #%d - (%f, %f, %f)", command.planeID,
+			command.latitude, command.longitude, command.altitude);
 	}
-	ROS_INFO("Returning command: (%f, %f, %f)", command.latitude, command.longitude, command.altitude);
+
 	return command;
 }
 

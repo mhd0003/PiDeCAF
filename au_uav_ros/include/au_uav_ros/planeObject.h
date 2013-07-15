@@ -109,6 +109,7 @@ namespace au_uav_ros {
             /* Ensure plane is not in the map */
             void planeOut_updateMap(au_uav_ros::PlaneObject &plane);
 
+
         private:
             /* Private data members */
             int id;

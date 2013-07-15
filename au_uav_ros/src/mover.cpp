@@ -196,10 +196,16 @@ void au_uav_ros::Mover::caCommandPublish()	{
 	}
 	ca_wp_lock.unlock();	
 
-	//don't want to forward defult command, if no command is returned
-//	if(com.latitude != INVALID_GPS_COOR && com.latitude !=0)
-		ca_commands.publish(com);
+	// md
+	// //don't want to forward defult command, if no command is returned
+	// //if(com.latitude != INVALID_GPS_COOR && com.latitude !=0)
+	// 	ca_commands.publish(com);
 
+	// md
+	// An avoidance command was in the queue. So publish it.
+	if (!empty_ca_q) {
+		ca_commands.publish(com);
+	}
 }
 
 void au_uav_ros::Mover::spinThread()	{

@@ -11,7 +11,6 @@
 
 #include "au_uav_ros/pi_standard_defs.h"
 #include "au_uav_ros/planeObject.h"
-#include "au_uav_ros/plane.h"
 #include "au_uav_ros/Fsquared.h"
 #include "au_uav_ros/ipn.h"
 
@@ -20,7 +19,6 @@ namespace au_uav_ros	{
 	private:
 		au_uav_ros::PlaneObject me;  	//planeObject representation of the plane running this algorithm
 		au_uav_ros::Command goal_wp;
-		ipn::Plane thisPlane;
 
 		boost::mutex goal_wp_lock;	//coordinate access to goal_wp 
 	public:
