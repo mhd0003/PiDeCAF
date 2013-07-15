@@ -4,6 +4,7 @@
 
 #include <errno.h>	
 #include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
 #include "au_uav_ros/serial_talker.h"
 #include "ros/ros.h"
 #include "std_msgs/String.h"
@@ -12,6 +13,10 @@
 #include "au_uav_ros/mavlink_read.h"
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
 #include <au_uav_ros/Telemetry.h>
+
+//functions for print info
+#include "au_uav_ros/standardFuncs.h"
+
 /*
  * Possible bug. Unable to contact roscore, need to put in provision?
  *

@@ -166,6 +166,8 @@ au_uav_ros::waypoint fsquared::findTempForceWaypoint(au_uav_ros::PlaneObject &me
 	meCurrentWaypoint.latitude = meCurrentCoordinates.latitude;
 	meCurrentWaypoint.longitude = meCurrentCoordinates.longitude;
 	meCurrentWaypoint.altitude = 0;
+
+	/*
 	if (inLoop(me, resultantForce)){
 		//pobj1 is in a loop, modify attractive force so that the destination is actually repulsive to break the cycle
 		attractiveForce.setDirection(manipulateAngle(attractiveForce.getDirection() + 180));
@@ -173,7 +175,7 @@ au_uav_ros::waypoint fsquared::findTempForceWaypoint(au_uav_ros::PlaneObject &me
 		//we changed aForce so now need to recalculate tForce
 		resultantForce = repulsiveForce + attractiveForce;
 	}
-
+	*/
 	return fsquared::motionVectorToWaypoint(resultantForce.getDirection(), meCurrentWaypoint, (WP_GEN_SCALAR * 10000));
 }
 

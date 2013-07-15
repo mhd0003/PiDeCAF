@@ -26,7 +26,7 @@ namespace au_uav_ros	{
 	class Mover {
 		private:
 			//Meta - State Machine fun. NOte - State is changed by gcs_command callback.
-			enum state {ST_NO_GO, ST_OK};	
+			enum state {ST_RED, ST_GREEN_CA_ON, ST_GREEN_CA_OFF};	
 			enum state current_state; 
 			boost::mutex state_change_lock;			//Both gcs_command callback and move() need to FIGHT TO THE DEATH
 
@@ -34,7 +34,8 @@ namespace au_uav_ros	{
 			CollisionAvoidance ca;
 
 			int planeID;					//current plane id
-
+			float initialLong, initialLat, initialAlt;	//First telemetry update, used to initialize goal_wp
+			
 			//Queues for Waypoints
 			au_uav_ros::Command goal_wp;			//store goal wp from Ground control 
 			std::deque<au_uav_ros::Command> ca_wp;	 	//store collision avoidance waypoints 
@@ -72,8 +73,10 @@ namespace au_uav_ros	{
 			//main decision making logic
 			void move();
 
-			//OK you can publish stuff now.
+			//OK you can publish CA commands (ST_GREEN_CA_ON).
 			void caCommandPublish();
+			//OK you can publish goal commands, ignore CA. (ST_GREEN_CA_OFF).
+			void goalCommandPublish();
 		public:
 			int getPlaneID() {return planeID;} 
 			bool init(ros::NodeHandle n, bool fake);

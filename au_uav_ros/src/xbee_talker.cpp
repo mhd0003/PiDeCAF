@@ -132,6 +132,9 @@ void au_uav_ros::XbeeTalker::listen()	{
 void au_uav_ros::XbeeTalker::myTelemCallback(au_uav_ros::Telemetry tUpdate)	{
 	ROS_INFO("XbeeTalker::telemCallback::ding! \n");
 
+	tUpdate.groundSpeed = forceAngle360(findAngle(tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.destLatitude, tUpdate.destLongitude));
+
+
 	mavlink_message_t mavlinkMsg;
         static uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
 	//stuff mavlinkMsg with all the correct paramaters

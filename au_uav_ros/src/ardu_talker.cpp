@@ -103,6 +103,7 @@ void au_uav_ros::ArduTalker::listen()	{
 			//Post update as new telemetry update
 			au_uav_ros::mav::convertMavlinkTelemetryToROS(myMSG, tUpdate);
 			tUpdate.planeID = message.sysid; 
+			tUpdate.telemetryHeader.frame_id = boost::lexical_cast<std::string>( forceAngle360(findAngle(tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.destLatitude, tUpdate.destLongitude)));
 	  		m_telem_pub.publish(tUpdate);
 		        ROS_INFO("Received telemetry message from UAV[#%d] (lat:%f|lng:%f|alt:%f)", tUpdate.planeID, tUpdate.currentLatitude, tUpdate.currentLongitude, tUpdate.currentAltitude);	
 
