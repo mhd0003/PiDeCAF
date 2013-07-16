@@ -68,7 +68,7 @@ rostopic pub /gcs_commands au_uav_ros/Command '{seq:  0, stamp: 10 ,  frame_id: 
 
 ###Faking telemetry
 
-
+The gcs_router node supports sending fake telemetry updates to other planes.  The following examples demonstrate how:
 
 Publishing goal waypoint, X = desired latitude, Y = desired longitude, Z = desired altitude
 ```
