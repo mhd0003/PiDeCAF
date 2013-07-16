@@ -42,16 +42,32 @@ Software
 
 
 
-Helpful commands:
+Helpful commands
+-----------------
+
+These commands can be run on a laptop with gcs_router running to issue specific commands to a Raspberry Pi running
+the PiDeCAF framework. Replace "255" with the planeID of the plane you would like to receive the command
 
 CA_ON
+```
 rostopic pub /gcs_commands au_uav_ros/Command '{seq:  0, stamp: 10 ,  frame_id: "o"}' 255 0 2 2 999 555 1 1
+```
+
 CA_OFF
+```
 rostopic pub /gcs_commands au_uav_ros/Command '{seq:  0, stamp: 10 ,  frame_id: "o"}' 255 0 2 2 999 444 1 1
+```
 STOP
+
+```
 rostopic pub /gcs_commands au_uav_ros/Command '{seq:  0, stamp: 10 ,  frame_id: "o"}' 255 0 2 2 999 777 1 1
+```
 
-Publishing goal waypoint
-rostopic pub /my_mav_telemetry au_uav_ros/Telemetry '{seq:  0, stamp: 10 ,  frame_id: "o"}' 26 0 X X X 200 200 200 3 3 4 5
-rostopic pub /my_mav_telemetry au_uav_ros/Telemetry '{seq:  0, stamp: 10 ,  frame_id: "o"}' 26 0 32.602597 -- -85.488859 100 200 200 200 3 3 4 5
-
+Publishing goal waypoint, X = desired latitude, Y = desired longitude, Z = desired altitude
+```
+rostopic pub /my_mav_telemetry au_uav_ros/Telemetry '{seq:  0, stamp: 10 ,  frame_id: "o"}' 255 0 X Y Z 200 200 200 3 3 4 5
+```
+Enter a "--" only once before your negative numbers to enter negative numbers as arguments
+```
+rostopic pub /my_mav_telemetry au_uav_ros/Telemetry '{seq:  0, stamp: 10 ,  frame_id: "o"}' 255 0 32.602597 -- -85.488859 100 200 200 200 3 3 4 5
+```
