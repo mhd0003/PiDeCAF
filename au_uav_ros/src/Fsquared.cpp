@@ -155,9 +155,9 @@ au_uav_ros::waypoint fsquared::findTempForceWaypoint(au_uav_ros::PlaneObject &me
 	resultantForce = repulsiveForce + attractiveForce;
 
 	//DEBUG
-	//ROS_INFO("Plane %d has attractiveForce of magnitude %f and direction %f", me.getID(),attractiveForce.getMagnitude(), attractiveForce.getDirection());
-	//ROS_INFO("Plane %d has repulsiveForce of magnitude %f and direction %f", me.getID(), repulsiveForce.getMagnitude(), repulsiveForce.getDirection());
-	//ROS_INFO("Plane %d has resultantForce of magnitude %f and direction %f", me.getID(), resultantForce.getMagnitude(), resultantForce.getDirection());
+	//ROS_ERROR("Plane %d has attractiveForce of magnitude %f and direction %f", me.getID(),attractiveForce.getMagnitude(), attractiveForce.getDirection());
+	ROS_ERROR("Plane %d repulsive:mag:and dir (%f|%f)", me.getID(), repulsiveForce.getMagnitude(), repulsiveForce.getDirection());
+	//ROS_ERROR("Plane %d has resultantForce of magnitude %f and direction %f", me.getID(), resultantForce.getMagnitude(), resultantForce.getDirection());
 	au_uav_ros::coordinate meCurrentCoordinates = me.getCurrentLoc();	//latitude and longitude defining where me is now
 	au_uav_ros::waypoint meCurrentWaypoint;			//holds same information as meCurrentCoordinates, but will
 													//be formatted as a waypoint with altitude 0
@@ -176,7 +176,7 @@ au_uav_ros::waypoint fsquared::findTempForceWaypoint(au_uav_ros::PlaneObject &me
 		resultantForce = repulsiveForce + attractiveForce;
 	}
 	*/
-	return fsquared::motionVectorToWaypoint(resultantForce.getDirection(), meCurrentWaypoint, (WP_GEN_SCALAR * 10000));
+	return fsquared::motionVectorToWaypoint(resultantForce.getDirection(), meCurrentWaypoint, (WP_GEN_SCALAR * 10));
 }
 
 //-----------------------------------------
@@ -222,6 +222,8 @@ au_uav_ros::mathVector fsquared::sumRepulsiveForces(au_uav_ros::PlaneObject &me,
 
 	std::map<int, au_uav_ros::PlaneObject> :: iterator it;
 	for(it = planesToAvoid.begin(); it!= planesToAvoid.end(); it++)	{
+		ROS_INFO("The plane in my map has coordinates: %f,%f and bearing %f", it-> second.getCurrentLoc().latitude,
+			it-> second.getCurrentLoc().longitude, it-> second.getCurrentBearing());
 		current = calculateRepulsiveForce(me, it-> second);
 		sum += current;
 	}
