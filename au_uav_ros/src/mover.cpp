@@ -197,7 +197,7 @@ void au_uav_ros::Mover::caCommandPublish()	{
 	ca_wp_lock.unlock();	
 
 	//don't want to forward deafult command, if no command is returned
-//	if(com.latitude != INVALID_GPS_COOR && com.latitude !=0)
+	if(com.latitude != 0 && com.latitude !=0)
 		ca_commands.publish(com);
 
 }
