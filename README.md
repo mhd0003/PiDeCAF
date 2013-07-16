@@ -42,8 +42,10 @@ Software
 
 
 
-Helpful commands
------------------
+Terminal Input
+--------------
+
+###Helpful commands
 
 These commands can be run on a laptop with gcs_router running to issue specific commands to a Raspberry Pi running
 the PiDeCAF framework. Replace "255" with the planeID of the plane you would like to receive the command
@@ -62,6 +64,11 @@ STOP
 ```
 rostopic pub /gcs_commands au_uav_ros/Command '{seq:  0, stamp: 10 ,  frame_id: "o"}' 255 0 2 2 999 777 1 1
 ```
+
+
+###Faking telemetry
+
+
 
 Publishing goal waypoint, X = desired latitude, Y = desired longitude, Z = desired altitude
 ```
