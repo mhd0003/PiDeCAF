@@ -1,4 +1,4 @@
-Decentralized Collision Avoidance Framework
+PiDeCAF
 =======================================
 
 This repository contains a package for ROS groovy that implements a decentralized collision avoidance framework for use on a Raspberry Pi.  The framework was developed as a part of the Auburn University ATTRACT program in the summer of 2013. Visit our website at https://sites.google.com/site/auburnuavreu2013team1/home for more details. The following documentation will be split up into two major components:
