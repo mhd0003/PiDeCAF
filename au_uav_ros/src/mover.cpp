@@ -195,11 +195,7 @@ void au_uav_ros::Mover::caCommandPublish()	{
 		ca_wp.pop_front();	
 	}
 	ca_wp_lock.unlock();	
-
-	//don't want to forward deafult command, if no command is returned
-	if(com.latitude != 0 && com.latitude !=0)
-		ca_commands.publish(com);
-
+	ca_commands.publish(com);
 }
 
 void au_uav_ros::Mover::spinThread()	{
