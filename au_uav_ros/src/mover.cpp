@@ -197,7 +197,9 @@ void au_uav_ros::Mover::caCommandPublish()	{
 		ca_wp.pop_front();	
 	}
 	ca_wp_lock.unlock();	
-	ca_commands.publish(com);
+	//don't want to forward if no ca command is returned
+	if(empty_ca_q)
+		ca_commands.publish(com);
 }
 
 void au_uav_ros::Mover::spinThread()	{
