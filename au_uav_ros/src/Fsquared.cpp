@@ -176,7 +176,7 @@ au_uav_ros::waypoint fsquared::findTempForceWaypoint(au_uav_ros::PlaneObject &me
 		resultantForce = repulsiveForce + attractiveForce;
 	}
 	*/
-	return fsquared::motionVectorToWaypoint(resultantForce.getDirection(), meCurrentWaypoint, (WP_GEN_SCALAR * 10));
+	return fsquared::motionVectorToWaypoint(resultantForce.getDirection(), meCurrentWaypoint, (WP_GEN_SCALAR));
 }
 
 //-----------------------------------------
