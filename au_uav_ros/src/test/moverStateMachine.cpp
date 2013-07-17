@@ -163,7 +163,7 @@ TEST(mover, amTesting)	{
 	ASSERT_TRUE(t);
 }
 
-/*
+
 TEST(mover, state_runthrough)	{
 
 
@@ -239,11 +239,11 @@ TEST(mover, state_runthrough)	{
 
 
 }
-*/
+
 
 //Given that avoidance is turned off, feed goal wps to mover.
 //om nom nom
-/*
+
 TEST(mover, ca_off_feeding)	{
 
 	ros::Duration(7).sleep(); //let spinner thread startup 
@@ -268,7 +268,9 @@ TEST(mover, ca_off_feeding)	{
 	std::vector<au_uav_ros::Command> forceFeeding = t.generateFakeWaypoints(5);
 	std::vector<ros::Time> sendingTimes = t.sendGCSCommands(forceFeeding, gcs);
 
-	
+
+	gcs.publish(t.regCom);			//goal_wp back to 0|0|0 for next test
+
 	fprintf(stderr, "STOP STOP!\n");	
 	gcs.publish(t.stop); //publish stop... transition back
 	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
@@ -293,7 +295,7 @@ TEST(mover, ca_off_feeding)	{
 
 
 }
-*/
+
 //Given that state is GREEN_CA_ON, let's see if I'll still get the goal wps.
 //test_bool is specified in launch file, passed as param to Mover node.
 TEST(mover, ca_on_feeding)	{
