@@ -26,7 +26,7 @@ Diversify field types (work on once this implementation is completed and tested
 #define ATTRACTIVE_FORCE 100 //defines the magnitude of the attractive force to a
 							 //waypoint
 //fsquared constants
-#define WP_GEN_SCALAR 3		//how far generated waypoint will be 
+#define WP_GEN_SCALAR 300	//how far generated waypoint will be 
 #define RADAR_ZONE 100		//the maximum distance "me" will track enemy
 
 
