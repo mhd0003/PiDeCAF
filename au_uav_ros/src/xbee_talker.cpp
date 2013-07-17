@@ -141,7 +141,9 @@ void au_uav_ros::XbeeTalker::myTelemCallback(au_uav_ros::Telemetry tUpdate)	{
 	mavlink_msg_au_uav_pack(tUpdate.planeID, compid, &mavlinkMsg, tUpdate.currentLatitude, tUpdate.currentLongitude,
 				tUpdate.currentAltitude, tUpdate.destLatitude, tUpdate.destLongitude, 
                                 tUpdate.destAltitude, tUpdate.groundSpeed, tUpdate.airSpeed, tUpdate.targetBearing,
-				 tUpdate.distanceToDestination, tUpdate.currentWaypointIndex);
+				(tUpdate.destLatitude - tUpdate.currentLatitude) * 1000000,
+				(tUpdate.destLongitude - tUpdate.currentLongitude) * 1000000);
+				
 	
 
         int messageLength = mavlink_msg_to_send_buffer(buffer, &mavlinkMsg);

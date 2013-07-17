@@ -155,10 +155,17 @@ au_uav_ros::waypoint fsquared::findTempForceWaypoint(au_uav_ros::PlaneObject &me
 	resultantForce = repulsiveForce + attractiveForce;
 
 	//DEBUG
+<<<<<<< HEAD
+	//ROS_INFO("Plane %d has attractiveForce of magnitude %f and direction %f", me.getID(),attractiveForce.getMagnitude(), attractiveForce.getDirection());
+	//ROS_INFO("Plane %d has repulsiveForce of magnitude %f and direction %f", me.getID(), repulsiveForce.getMagnitude(), repulsiveForce.getDirection());
+	//ROS_INFO("Plane %d has resultantForce of magnitude %f and direction %f", me.getID(), resultantForce.getMagnitude(), resultantForce.getDirection());
+	au_uav_ros::waypoint meCurrentCoordinates = me.getCurrentLoc();	//latitude and longitude defining where me is now
+=======
 	//ROS_ERROR("Plane %d has attractiveForce of magnitude %f and direction %f", me.getID(),attractiveForce.getMagnitude(), attractiveForce.getDirection());
 	ROS_ERROR("Plane %d repulsive:mag:and dir (%f|%f)", me.getID(), repulsiveForce.getMagnitude(), repulsiveForce.getDirection());
 	//ROS_ERROR("Plane %d has resultantForce of magnitude %f and direction %f", me.getID(), resultantForce.getMagnitude(), resultantForce.getDirection());
 	au_uav_ros::coordinate meCurrentCoordinates = me.getCurrentLoc();	//latitude and longitude defining where me is now
+>>>>>>> 830ad6d677d37db58a1afc0f0ae0d7302e900f53
 	au_uav_ros::waypoint meCurrentWaypoint;			//holds same information as meCurrentCoordinates, but will
 													//be formatted as a waypoint with altitude 0
 

@@ -9,11 +9,31 @@
 #include <au_uav_ros/pi_standard_defs.h>
 #include <roscpp/Logger.h>
 #include <au_uav_ros/Command.h>
+#include <au_uav_ros/Telemetry.h>
 
 #include <boost/thread.hpp>
 
 class test_state_machine {
 	public:
+	
+	boost::mutex queue_lock;
+
+	//stuff
+	ros::Time sinceLastCACommand;	
+	ros::Duration lag;	//one second lag OK from sending command to reponse
+
+	au_uav_ros::Command stop;
+	au_uav_ros::Command go_ca_off;
+	au_uav_ros::Command go_ca_on;
+	au_uav_ros::Command regCom;
+
+	au_uav_ros::Command previousCom;			//don't want to pushback duplicate commands
+
+	std::vector<au_uav_ros::Command> ca_commands_bin;	// all the ca waypoints i've gotten.
+	std::vector<ros::Time> time_bin;			// time that ca_waypoints came in. 
+	double sleep_time; 
+
+
 	test_state_machine()	{
 		sinceLastCACommand = ros::Time::now();
 		lag.sec = 1;
@@ -30,8 +50,8 @@ class test_state_machine {
 		go_ca_on.longitude = META_START_CA_ON_LON;
 		go_ca_on.planeID = 999;
 
-		regCom.latitude = 123;
-		regCom.longitude = 123;
+		regCom.latitude = 0;
+		regCom.longitude = 0;
 		regCom.planeID = 999;
 	}
 
@@ -44,9 +64,9 @@ class test_state_machine {
 
 		
 		//Only push back if it's CHANGED (alg continually outputs goal_wp)  and not default (0.0)
-		if(com.latitude != 0 || previousCom.latitude != com.latitude)	{ 
-			fprintf(stderr, "tester::callback -> GASP it's a new ca_command!\n");
-			fprintf(stderr, "\tnew:: lat: %f|lon: %f|alt: %f\n",com.latitude, com.longitude, com.altitude);
+		if(com.latitude != 0 && previousCom.latitude != com.latitude)	{ 
+			fprintf(stderr, "tester::callback -> new ca_command new new new!\n");
+			fprintf(stderr, "\tnew:: lat: %f|lon: %f|alt: %f\n\n",com.latitude, com.longitude, com.altitude);
 			queue_lock.lock();
 			ca_commands_bin.push_back(com);
 			time_bin.push_back(arrival);	
@@ -54,6 +74,44 @@ class test_state_machine {
 		}
 		previousCom = com;
 	}
+
+	
+	std::vector<au_uav_ros::Command> generateFakeWaypoints(int numWaypoints)	{
+
+		
+		au_uav_ros::Command com;
+		com.latitude = 10; com.longitude = 10; com.altitude = 10; com.planeID = 999;	
+		std::vector<au_uav_ros::Command> forceFeeding;
+		for(int i =0; i< numWaypoints; i++)	{
+			forceFeeding.push_back(com);
+			com.latitude++; com.longitude++; com.altitude++;
+			fprintf(stderr, "test::Pushed back lat: %f| long: %f| alt: %f\n", forceFeeding[i].latitude,
+											forceFeeding[i].longitude,
+											forceFeeding[i].altitude);
+
+		}
+		return forceFeeding;
+
+	} 
+
+	std::vector<ros::Time> sendGCSCommands(std::vector<au_uav_ros::Command> forceFeeding, ros::Publisher gcs)	{
+	
+		std::vector<ros::Time> sendingTimes;
+		for(int i =0; i< forceFeeding.size(); i++)	{
+			fprintf(stderr, "test::GCS sent lat: %f| long: %f| alt: %f\n", forceFeeding[i].latitude,
+											forceFeeding[i].longitude,
+											forceFeeding[i].altitude);
+			gcs.publish(forceFeeding[i]);
+			sendingTimes.push_back(ros::Time::now());	
+			ros::Duration(.25).sleep();	//time enough to measure lag initially
+		}
+
+		return sendingTimes;
+
+	
+	}
+
+
 
 	bool ca_commands_chatty()	{
 		return ros::Time::now() - sinceLastCACommand < lag; 
@@ -75,30 +133,35 @@ class test_state_machine {
 		queue_lock.unlock();
 		return temp;
 	}
-	boost::mutex queue_lock;
-
-	//stuff
-	ros::Time sinceLastCACommand;	
-	ros::Duration lag;	//one second lag OK from sending command to reponse
-
-	au_uav_ros::Command stop;
-	au_uav_ros::Command go_ca_off;
-	au_uav_ros::Command go_ca_on;
-	au_uav_ros::Command regCom;
-
-	au_uav_ros::Command previousCom;			//don't want to pushback duplicate commands
-
-	std::vector<au_uav_ros::Command> ca_commands_bin;	// all the ca waypoints i've gotten.
-	std::vector<ros::Time> time_bin;			// time that ca_waypoints came in. 
-	double sleep_time; 
-
 };
 
 void spinThread()	{
-	fprintf(stderr, "spinning...");
+	fprintf(stderr, "ros::spin spinning...\n");
 	ros::spin();
 }
 
+//Publish my own fake telemetry. Force ca.avoid to be called
+void pubTelem()	{
+	fprintf(stderr, "pub telem thread:: spinning... \n");
+	ros::Rate r(4);	//publish telem - this rate WILL end in dropped :w
+
+
+	//ros publish
+	ros::NodeHandle n;
+	ros::Publisher pub = n.advertise<au_uav_ros::Telemetry>("all_telemetry",5);
+	au_uav_ros::Telemetry telem;
+	while(ros::ok())	{
+		pub.publish(telem);	
+		r.sleep();	
+	}
+}
+
+TEST(mover, amTesting)	{
+	ros::NodeHandle n;
+	bool t;
+	n.getParam("testing", t);
+	ASSERT_TRUE(t);
+}
 
 
 TEST(mover, state_runthrough)	{
@@ -181,7 +244,7 @@ TEST(mover, state_runthrough)	{
 //Given that avoidance is turned off, feed goal wps to mover.
 //om nom nom
 
-TEST(mover, no_avoid_feeding)	{
+TEST(mover, ca_off_feeding)	{
 
 	ros::Duration(7).sleep(); //let spinner thread startup 
 	
@@ -191,44 +254,27 @@ TEST(mover, no_avoid_feeding)	{
 	int numWaypoints = 5;
 	ros::Publisher gcs = n.advertise<au_uav_ros::Command>("gcs_commands", 5);	
 	ros::Subscriber ca = n.subscribe("ca_commands", 10, &test_state_machine::ca_command_callback, &t);	
+	
+
+	//Transitioning to ca_off state	
+	fprintf(stderr, "-> GREEN_CA_OFF/n");
 	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
 	EXPECT_TRUE(t.ca_commands_silent());	
 	gcs.publish(t.go_ca_off); //transition
 	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
 	EXPECT_TRUE(t.ca_commands_chatty());	
 
+	//Publishing some GCS commands
+	std::vector<au_uav_ros::Command> forceFeeding = t.generateFakeWaypoints(5);
+	std::vector<ros::Time> sendingTimes = t.sendGCSCommands(forceFeeding, gcs);
 
 
-	
-	au_uav_ros::Command com;
-	com.latitude = 10; com.longitude = 10; com.altitude = 10; com.planeID = 999;	
-	std::vector<au_uav_ros::Command> forceFeeding;
-	for(int i =0; i< numWaypoints; i++)	{
-		forceFeeding.push_back(com);
-		com.latitude++; com.longitude++; com.altitude++;
-		fprintf(stderr, "test::Pushed back lat: %f| long: %f| alt: %f\n", forceFeeding[i].latitude,
-										forceFeeding[i].longitude,
-										forceFeeding[i].altitude);
-	}
-
-	std::vector<ros::Time> sendingTimes;
-	for(int i =0; i< numWaypoints; i++)	{
-		fprintf(stderr, "test::GCS sent lat: %f| long: %f| alt: %f\n", forceFeeding[i].latitude,
-										forceFeeding[i].longitude,
-										forceFeeding[i].altitude);
-		gcs.publish(forceFeeding[i]);
-		sendingTimes.push_back(ros::Time::now());	
-		ros::Duration(.25).sleep();	//time enough to measure lag initially
-	}
+	gcs.publish(t.regCom);			//goal_wp back to 0|0|0 for next test
 
 	fprintf(stderr, "STOP STOP!\n");	
 	gcs.publish(t.stop); //publish stop... transition back
 	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
 	EXPECT_TRUE(t.ca_commands_silent());	
-
-	
-//	fprintf(stderr, "sleeping");
-	//ros::Duration(10).sleep(); //let mover get moving
 
 	//Now, seeing if the bins are equal...
 
@@ -239,25 +285,86 @@ TEST(mover, no_avoid_feeding)	{
 	
 	for(int i =0; i< numWaypoints; i++)	{
 		fprintf(stderr, "received :: back lat: %f \n", ca_commands_bin[i].latitude);
-//		EXPECT_TRUE(forceFeeding[i].latitude == ca_commands_bin[i].latitude) << "differ: " << forceFeeding[i] << "and " << ca_commands_bin[i]; 
-//		EXPECT_TRUE(forceFeeding[i].longitude == ca_commands_bin[i].longitude) << "differ: " << forceFeeding[i] << "and " << ca_commands_bin[i]; 
-//		EXPECT_TRUE(forceFeeding[i].altitude == ca_commands_bin[i].altitude) << "differ: " << forceFeeding[i] << "and " << ca_commands_bin[i]; 
-//		fprintf(stderr, " Time diff (s) command %d: %f\n\n", i, (time_bin[i] - sendingTimes[i]).toSec());	
+		EXPECT_TRUE(forceFeeding[i].latitude == ca_commands_bin[i].latitude); 
+		EXPECT_TRUE(forceFeeding[i].longitude == ca_commands_bin[i].longitude);
+		EXPECT_TRUE(forceFeeding[i].altitude == ca_commands_bin[i].altitude) << "differ: " << forceFeeding[i] << "and " << ca_commands_bin[i]; 
+
+		fprintf(stderr, " Time diff (s) command %d: %f\n\n", i, (time_bin[i] - sendingTimes[i]).toSec());	
 	}		
 
 
-	fprintf(stderr, "test::TRYING TO SHTUDOWN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
 }
 
+//Given that state is GREEN_CA_ON, let's see if I'll still get the goal wps.
+//test_bool is specified in launch file, passed as param to Mover node.
+TEST(mover, ca_on_feeding)	{
+	ros::Duration(7).sleep(); //let spinner thread startup 
+
+
+	//CA avoid is only called when a telemetry update is received. We'll emulate our telem updates coming in at 1hz
+	//in a separate thread, called from main.
+	
+	
+	test_state_machine t;
+	ros::NodeHandle n;	
+	int numWaypoints = 5;
+	ros::Publisher gcs = n.advertise<au_uav_ros::Command>("gcs_commands", 5);	
+	ros::Subscriber ca = n.subscribe("ca_commands", 10, &test_state_machine::ca_command_callback, &t);	
+	
+
+	//Transitioning to ca_on state	
+	fprintf(stderr, "-> GREEN_CA_ON\n");
+	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
+	EXPECT_TRUE(t.ca_commands_silent());	
+	gcs.publish(t.go_ca_on); //transition
+	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
+	EXPECT_TRUE(t.ca_commands_chatty());	
+
+	//Publishing some GCS commands
+	std::vector<au_uav_ros::Command> forceFeeding = t.generateFakeWaypoints(5);
+	std::vector<ros::Time> sendingTimes = t.sendGCSCommands(forceFeeding, gcs);
+
+	ros::Duration(t.sleep_time).sleep();	//enough time to publish everything
+	
+	fprintf(stderr, "STOP STOP!\n");	
+	gcs.publish(t.stop); //publish stop... transition back
+	ros::Duration(t.sleep_time).sleep();	//time enough to measure lag initially
+	EXPECT_TRUE(t.ca_commands_silent());	
+
+	//Now, seeing if the bins are equal...
+
+	fprintf(stderr, "Trying to get received...\n");	
+	std::vector<au_uav_ros::Command> ca_commands_bin = t.getReceivedCommands();	
+	std::vector<ros::Time> time_bin = t.getReceivedTimes();		
+
+
+	fprintf(stderr, "sent :%d | recv: %d", forceFeeding.size(), ca_commands_bin.size());	
+	ASSERT_TRUE(forceFeeding.size() == ca_commands_bin.size()) << "sent != recv: " << forceFeeding.size() << " " << ca_commands_bin.size();
+	for(int i =0; i< forceFeeding.size(); i++)	{
+		fprintf(stderr, "received :: back lat: %f \n", ca_commands_bin[i].latitude);
+		EXPECT_TRUE(forceFeeding[i].latitude == ca_commands_bin[i].latitude); 
+		EXPECT_TRUE(forceFeeding[i].longitude == ca_commands_bin[i].longitude);
+		EXPECT_TRUE(forceFeeding[i].altitude == ca_commands_bin[i].altitude) << "differ: " << forceFeeding[i] << "and " << ca_commands_bin[i]; 
+
+		fprintf(stderr, " Time diff (s) command %d: %f\n\n", i, (time_bin[i] - sendingTimes[i]).toSec());	
+	}		
+
+
+
+
+}
 
 int main(int argc, char ** argv)	{
 	ros::init(argc, argv, "planeIDTester");
 	testing::InitGoogleTest(&argc, argv);
-	boost::thread spinner(spinThread);
+	boost::thread spinner(spinThread); 	//calls ros::spin()
+	boost::thread telem(pubTelem);		//continually publishes fake telemetry at 1hz, to force ca.avoid to run
 	ros::Time::init();
 	RUN_ALL_TESTS();
+	fprintf(stderr, "test::TRYING TO SHTUDOWN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 	ros::shutdown();
 	spinner.join();
+	telem.join();
 }
 
